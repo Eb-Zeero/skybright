@@ -103,6 +103,30 @@ class Config:
                                                             config_name=config_name,
                                                             required=False)
 
+        # Database user
+        database_user = Config._environment_variable('DATABASE_USER',
+                                                     prefix=prefix,
+                                                     config_name=config_name,
+                                                     required=False)
+
+        # Database host
+        database_host = Config._environment_variable('DATABASE_HOST',
+                                                     prefix=prefix,
+                                                     config_name=config_name,
+                                                     required=False)
+
+        # Database pass
+        database_password = Config._environment_variable('DATABASE_PASSWORD',
+                                                         prefix=prefix,
+                                                         config_name=config_name,
+                                                         required=False)
+
+        # Database_name
+        database_name = Config._environment_variable('DATABASE_NAME',
+                                                     prefix=prefix,
+                                                     config_name=config_name,
+                                                     required=False)
+
         # disable SSL?
         try:
             ssl_status = SSLStatus.ENABLED if int(os.environ.get(prefix + 'SSL_ENABLED')) != 0 else SSLStatus.DISABLED
@@ -135,7 +159,12 @@ class Config:
             migration_tool=migration_tool,
             secret_key=secret_key,
             ssl_status=ssl_status,
-            with_logging=with_logging
+            with_logging=with_logging,
+
+            database_user=database_user,
+            database_host=database_host,
+            database_password=database_password,
+            database_name=database_name,
         )
 
     @staticmethod

@@ -7,6 +7,7 @@ import time
 from fabric.api import local, env, run, sudo
 
 from config import Config
+from app.main.views import BOKEH_PORT
 
 # environment variable prefix
 prefix = Config.environment_variable_prefix()
@@ -24,7 +25,6 @@ app_dir_name = os.environ[prefix + 'DEPLOY_APP_DIR_NAME']
 web_user = os.environ.get(prefix + 'DEPLOY_WEB_USER', 'www-data')
 web_user_group = os.environ.get(prefix + 'DEPLOY_WEB_USER_GROUP', 'www-data')
 domain_name = os.environ.get(prefix + 'DEPLOY_DOMAIN_NAME', host)
-bokeh_server_port = os.environ.get(prefix + 'DEPLOY_BOKEH_SERVER_PORT', 5100)
 migration_tool = settings['migration_tool']
 migration_sql_dir = settings['migration_sql_dir']
 
@@ -67,7 +67,7 @@ def update_supervisor():
         site_dir=site_dir,
         web_user=web_user,
         host=domain_name,
-        bokeh_server_port=bokeh_server_port,
+        bokeh_server_port=BOKEH_PORT,
         files=' '.join(files))
     sudo('{sed} > /etc/supervisor/conf.d/{domain_name}.conf'.format(
         sed=sed,
@@ -167,7 +167,7 @@ def update_webassets():
          'fi'.format(webassets_cache=webassets_cache))
 
     # create bundles (must be run as root, as the deploy user doesn't own the error log)
-    sudo('cd {site_dir}; export FLASK_APP=run_server.py; export FLASK_CONFIG=production; venv/bin/flask assets build'
+    sudo('cd {site_dir}; export FLASK_APP=site_app.py; export FLASK_CONFIG=production; venv/bin/flask assets build'
          .format(site_dir=site_dir))
 
     # make deploy user owner of the bundle directory

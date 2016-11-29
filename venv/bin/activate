@@ -32,10 +32,14 @@ deactivate () {
     # Self destruct!
         unset -f deactivate
     fi
+    unset FLASK_APP
+    unset FLASK_CONFIG
 }
 
 # unset irrelavent variables
 deactivate nondestructive
+export FLASK_APP=site_app.py
+export FLASK_CONFIG=development
 
 VIRTUAL_ENV="/home/nhlavutelo/Documents/project/hub_app/skybright/venv"
 export VIRTUAL_ENV
