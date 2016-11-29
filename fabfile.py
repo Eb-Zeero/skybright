@@ -103,7 +103,12 @@ def update_environment_variables_file():
         LOGGING_MAIL_SUBJECT=settings['logging_mail_subject'],
         LOGGING_MAIL_TO_ADDRESSES=settings['logging_mail_to_addresses'],
         SECRET_KEY=settings['secret_key'],
-        SSL_STATUS=settings['ssl_status']
+        SSL_STATUS=settings['ssl_status'],
+
+        DATABASE_HOST=settings['database_host'],
+        DATABASE_USER=settings['database_user'],
+        DATABASE_PASSWORD=settings['database_password'],
+        DATABASE_NAME=settings['database_name'],
     )
     file_content = ''
     keys = sorted(environment_variables.keys())
@@ -277,6 +282,8 @@ def deploy(with_setting_up=False):
 
     # setup Nginx
     update_nginx_conf()
+
+    reboot()
 
 
 def setup():
