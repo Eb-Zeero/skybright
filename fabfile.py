@@ -28,6 +28,11 @@ domain_name = os.environ.get(prefix + 'DEPLOY_DOMAIN_NAME', host)
 migration_tool = settings['migration_tool']
 migration_sql_dir = settings['migration_sql_dir']
 
+database_host = os.environ[prefix + 'DATABASE_HOST']
+database_user = os.environ[prefix + 'DATABASE_USER']
+database_password = os.environ[prefix + 'DATABASE_PASSWORD']
+database_name = os.environ[prefix + 'DATABASE_NAME']
+
 site_dir = '$HOME/' + app_dir_name
 
 env.hosts = ['{username}@{host}'.format(username=deploy_user, host=host)]
@@ -108,7 +113,7 @@ def update_environment_variables_file():
         DATABASE_HOST=settings['database_host'],
         DATABASE_USER=settings['database_user'],
         DATABASE_PASSWORD=settings['database_password'],
-        DATABASE_NAME=settings['database_name'],
+        DATABASE_NAME=settings['database_name']
     )
     file_content = ''
     keys = sorted(environment_variables.keys())

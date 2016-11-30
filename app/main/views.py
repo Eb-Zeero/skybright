@@ -2,17 +2,10 @@ from flask import request
 from urllib.parse import urlparse
 from flask import render_template, Flask
 from bokeh.embed import autoload_server
-from bokeh.client import pull_session
 
 BOKEH_PORT = 5100
 
 from . import main
-
-'''
-@main.route('/')
-def index():
-    return render_template('index.html')
-'''
 
 
 @main.route('/')

@@ -43,7 +43,6 @@ def empty_range(t, p, f):
     range_source[t][p][f].data['position'] = []
     range_source[t][p][f].data['telescope'] = []
 
-
 config = {
     'user': os.environ['SKY_DATABASE_USER'],
     'passwd': os.environ['SKY_DATABASE_PASSWORD'],
@@ -275,16 +274,16 @@ fail = False
 if str(dat)[:4] not in y:
     y.append(str(dat)[:4])
 
-year_ = Select(title="Year:", value=str(dat)[:4], options=y, width=15)
-month_ = Select(title="Month:", value=str(dat)[5:7], options=m, width=10)
-day_ = Select(title="Day:", value=str(dat)[8:10], width=10)
+year_ = Select(title="Year:", value=str(dat)[:4], options=y)
+month_ = Select(title="Month:", value=str(dat)[5:7], options=m)
+day_ = Select(title="Day:", value=str(dat)[8:10])
 
-range_year_min = Select(title="Year:", value=str(dat_)[:4], options=y, width=15)
-range_month_min = Select(title="Month:", value=str(dat_)[5:7], width=10, options=m)
-range_day_min = Select(title="Day:", value=str(dat_)[8:10], width=10)
-range_year_max = Select(title="Year:", value=str(dat)[:4], options=y, width=15)
-range_month_max = Select(title="Month:", value=str(dat)[5:7], width=10, options=m)
-range_day_max = Select(title="Day:", value=str(dat)[8:10], width=10)
+range_year_min = Select(title="Year:", value=str(dat_)[:4], options=y)
+range_month_min = Select(title="Month:", value=str(dat_)[5:7], options=m)
+range_day_min = Select(title="Day:", value=str(dat_)[8:10])
+range_year_max = Select(title="Year:", value=str(dat)[:4], options=y)
+range_month_max = Select(title="Month:", value=str(dat)[5:7], options=m)
+range_day_max = Select(title="Day:", value=str(dat)[8:10])
 
 
 # ===================== Selectors End ==============================
@@ -292,9 +291,9 @@ range_day_max = Select(title="Day:", value=str(dat)[8:10], width=10)
     Buttons
 '''
 # Buttons ========================================================================================================
-submit_btn = Button(label="Submit", width=15)
-week_btn = Button(label="Week", width=15)
-range_submit_btn = Button(label="Submit", width=15)
+submit_btn = Button(label="Submit")
+week_btn = Button(label="Week")
+range_submit_btn = Button(label="Submit")
 
 # checkbox ========================================================================================================
 telescope_group = CheckboxGroup(labels=["Sunrise", "Sunset"], active=[0, 1])
@@ -1203,6 +1202,9 @@ range_telescope_group.on_click(lambda selected_tele: update_range_checkbox_list(
 month_.on_change('value', month_changed)
 range_month_min.on_change('value', range_month_min_changed)
 range_month_max.on_change('value', range_month_max_changed)
+year_.on_change('value', month_changed)
+range_year_min.on_change('value', range_month_min_changed)
+range_year_max.on_change('value', range_month_max_changed)
 # =======================================================================================
 
 
@@ -1213,16 +1215,16 @@ inputs = widgetbox(cloud_coverage, filter_div, filter_group, telescope_div, tele
 range_inputs = widgetbox(range_cloud_coverage, range_telescope_div, range_telescope_group, range_position_div,
                          range_position_group,
                          range_filter_div, range_filter_group)
-wid_year = widgetbox(year_, week_btn, width=100, height=60)
-wid_month = widgetbox(month_, width=90, height=60)
-wid_day = widgetbox(day_, submit_btn, width=90, height=60)
+wid_year = widgetbox(year_, week_btn, width=110, height=60)
+wid_month = widgetbox(month_, width=100, height=60)
+wid_day = widgetbox(day_, submit_btn, width=100, height=60)
 
 dev_col = column( start_div)
 r_dev_col = column(range_start_div, range_end_div)
 
-wid_year_r = widgetbox(range_year_min, range_year_max, width=90, height=50)
-wid_month_r = widgetbox(range_month_min, range_month_max, width=80, height=50)
-wid_day_r = widgetbox(range_day_min, range_day_max, range_submit_btn, width=80, height=50)
+wid_year_r = widgetbox(range_year_min, range_year_max, width=110, height=50)
+wid_month_r = widgetbox(range_month_min, range_month_max, width=100, height=50)
+wid_day_r = widgetbox(range_day_min, range_day_max, range_submit_btn, width=100, height=50)
 # ==========Widget Box==============================================================================================
 #
 # ==========View====================================================================================================
