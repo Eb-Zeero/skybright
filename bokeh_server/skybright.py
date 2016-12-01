@@ -14,6 +14,7 @@ from dateutil.relativedelta import relativedelta
 import pymysql
 import os
 import ephem
+import configparser
 
 
 def empty_source(t, p, f):
@@ -43,11 +44,22 @@ def empty_range(t, p, f):
     range_source[t][p][f].data['position'] = []
     range_source[t][p][f].data['telescope'] = []
 
-config = {
-    'user': os.environ['SKY_DATABASE_USER'],
-    'passwd': os.environ['SKY_DATABASE_PASSWORD'],
-    'host': os.environ['SKY_DATABASE_HOST'],
-    'db': os.environ['SKY_DATABASE_NAME']
+conf = configparser.ConfigParser()
+conf.read('$HOME/skybright/bokeh_server/none_plots/setter.ini')
+try:
+    config = {
+        'user': conf['MYSQL']['user'],
+        'passwd': conf['MYSQL']['passwd'],
+        'host': conf['MYSQL']['host'],
+        'db': conf['MYSQL']['db'],
+    }
+
+except:
+    config = {
+        'user': os.environ['SKY_DATABASE_USER'],
+        'passwd': os.environ['SKY_DATABASE_PASSWORD'],
+        'host': os.environ['SKY_DATABASE_HOST'],
+        'db': os.environ['SKY_DATABASE_NAME']
 }
 
 
