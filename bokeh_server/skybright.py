@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from bokeh.io import curdoc
 from bokeh.layouts import column, widgetbox, layout, gridplot
-from bokeh.models import HoverTool, ColumnDataSource, Select, Button, BoxAnnotation, Label
+from bokeh.models import HoverTool, ColumnDataSource, Select, Button, BoxAnnotation, Label, Legend
 from bokeh.models.callbacks import CustomJS
 from bokeh.models.widgets import Slider, Div, CheckboxGroup, Tabs, Panel
 from bokeh.plotting import figure
@@ -43,6 +43,7 @@ def empty_range(t, p, f):
     range_source[t][p][f].data['filter'] = []
     range_source[t][p][f].data['position'] = []
     range_source[t][p][f].data['telescope'] = []
+    range_source[t][p][f].data['count'] = []
 
 conf = configparser.ConfigParser()
 conf.read('$HOME/skybright/bokeh_server/none_plots/setter.ini')
@@ -188,7 +189,7 @@ def read_extinction_database(date_, num):
         date_ = date_n - timedelta(days=num)
 
     select_ext = (
-                     "SELECT DATE_TIME, EXT_ERROR, EXTINCTION, FILTER_BAND, TELESCOPE, CLOUD_COVERAGE "
+                     "SELECT DATE_TIME, EXTINCTION, EXT_ERROR, FILTER_BAND, TELESCOPE, CLOUD_COVERAGE "
                      "FROM Extinctions_Red WHERE DATE_TIME > '%s-%s-%s 13:00:00' AND DATE_TIME < '%s-%s-%s 13:00:00' "
                  ) % (str(date_)[0:4], str(date_)[5:7], str(date_)[8:10],
                       str(date_n)[0:4], str(date_n)[5:7], str(date_n)[8:10])
@@ -197,8 +198,6 @@ def read_extinction_database(date_, num):
         cursor = cnx.cursor()
         cursor.execute(select_ext)
         ext_data = cursor.fetchall()
-        print("yeahh")
-
     except:
         if cnx:
             print("there was a problem with selecting")
@@ -364,9 +363,9 @@ for t in range(2):
     for p in range(5):
         for fr in range(4):
             range_source[t][p].append(ColumnDataSource(data=dict(x=[], y=[], h_date=[], telescope=[], filter=[],
-                                                                 error=[], position=[])))
+                                                                 error=[], position=[], count=[])))
             range_span_source[t][p].append(ColumnDataSource(data=dict(x=[], h_date=[], y=[], telescope=[],
-                                                                      filter=[], error=[], position=[])))
+                                                                      filter=[], error=[], position=[], count=[])))
 
 source = ColumnDataSource(data=dict(value=[30]))
 d_source = ColumnDataSource(data=dict(value=[30]))
@@ -395,6 +394,8 @@ ext_hover = HoverTool(
             </div>
             """
 )
+ext_hover.point_policy = "snap_to_data"
+ext_hover.line_policy = "interp"
 
 tool_list = "pan,reset,save,wheel_zoom, box_zoom"
 range_hover = HoverTool(
@@ -404,12 +405,11 @@ range_hover = HoverTool(
                 <span style="font-size: 15px; font-weight: bold;">@h_date</span>
             </div>
             <div>
-                <span style="font-size: 15px; font-weight: bold;">SB: </span>
-                <span style="font-size: 15px;">@y </span>
+                <span style="font-size: 17px;">No. of Points: @count</span>
             </div>
             <div>
-                <span style="font-size: 15px; font-weight: bold;">Average Error: </span>
-                <span style="font-size: 15px; color: #966;">@error</span>
+                <span style="font-size: 15px; font-weight: bold;">SB: </span>
+                <span style="font-size: 15px;">@y +/-@error </span>
             </div>
             <div>
                 <span style="font-size: 15px; color: #969;">@telescope</span>
@@ -423,6 +423,8 @@ range_hover = HoverTool(
         </div>
         """
 )
+range_hover.line_policy = "interp"
+range_hover.point_policy = "follow_mouse"
 plot = []
 hover = [0, 1, 2, 3, 4]
 annotations = [[], [], [], [], [], [], []]
@@ -437,8 +439,8 @@ for i in range(5):
                 <div>
                     <span style="font-size: 17px;">SB: </span>
                     <span style="font-size: 17px; font-weight: bold;">@y </span>
-                    <span style="font-size: 17px; color: #966;">  [error: </span>
-                    <span style="font-size: 17px; color: #966;"> @error]</span>
+                    <span style="font-size: 17px; color: #966;"> +/- </span>
+                    <span style="font-size: 17px; color: #966;"> @error</span>
                 </div>
                 <div>
                     <span style="font-size: 18px; font-weight: bold;">@telescope</span>
@@ -447,6 +449,8 @@ for i in range(5):
             </div>
             """
     )
+    hover[i].point_policy = "follow_mouse"
+    hover[i].line_policy = "interp"
     tit_ = find_tittle(i)
     plt = figure(title=tit_,
                  toolbar_location='above',
@@ -462,11 +466,12 @@ for i in range(5):
     plot[i].title.text_color = "navy"
     plot[i].border_fill_color = "#f4f4f4"
     plot[i].min_border = 30
+    plot[i].x_range = plot[0].x_range
 
 ext_plot = figure(title="Extinctions",
                   tools=[tool_list, ext_hover],
                   x_axis_type="datetime",
-                  background_fill_alpha=0.09)
+                  background_fill_alpha=0.09, x_range=plot[0].x_range)
 ext_plot.xaxis.major_label_orientation = pi / 4
 ext_plot.ygrid.grid_line_color = None
 ext_plot.title.text_font_size = "25px"
@@ -538,47 +543,46 @@ range_data = read_range_database([range_year_min.value, range_month_min.value, r
 # ===================== Data Load End ===================================
 
 
-def set_data_source(date_, sb_, cc_, h_date, err_, tele_, fil_, t, p, f):
+def set_data_source(dte_, sb_, cc_, h_date, err_, tl_, fil_, t, p, f):
     global data_source
-    data_source[t][p][f].data['x'] = date_
+    data_source[t][p][f].data['x'] = dte_
     data_source[t][p][f].data['y'] = sb_
     data_source[t][p][f].data['coverage'] = cc_
-    data_source[t][p][f].data['h_date'] = h_date
+    data_source[t][p][f].data['h_date'] = [str(d_ - timedelta(hours=2)) for d_ in dte_]
     data_source[t][p][f].data['error'] = err_
-    data_source[t][p][f].data['telescope'] = tele_
+    data_source[t][p][f].data['telescope'] = tl_
     data_source[t][p][f].data['filter'] = fil_
 
 
-def set_ext_source(date_, ext_, err_, cc_, h_date, tele_, fil_, t, f):
+def set_ext_source(dte_, ext_, err_, cc_, h_date, tle_, fil_, t, f):
     global ext_source
-    ext_source[t][f].data['x'] = date_
+    ext_source[t][f].data['x'] = dte_
     ext_source[t][f].data['y'] = ext_
     ext_source[t][f].data['error'] = err_
     ext_source[t][f].data['coverage'] = cc_
-    ext_source[t][f].data['h_date'] = h_date
-    ext_source[t][f].data['telescope'] = tele_
+    ext_source[t][f].data['h_date'] = [str(d_ - timedelta(hours=2)) for d_ in dte_]
+    ext_source[t][f].data['telescope'] = tle_
     ext_source[t][f].data['filter'] = fil_
 
 
-def set_range_data_source(med_days, med_list, med_err, med_tel, med_pos, med_fil):
+def set_range_data_source(med_days, med_list, med_err, med_tel, med_pos, med_fil, med_cou):
     global range_data, range_source, range_span_source
 
     for t in range(2):
         for p in range(5):
             for f in range(4):
                 range_source[t][p][f].data['x'] = med_days[t][p][f]
-                range_source[t][p][f].data['h_date'] = [str(d_)[:10] for d_ in med_days[t][p][f]]
+                range_source[t][p][f].data['h_date'] = [str(d_ )[:10] for d_ in med_days[t][p][f]]
                 range_source[t][p][f].data['y'] = med_list[t][p][f]
                 range_source[t][p][f].data['error'] = med_err[t][p][f]
                 range_source[t][p][f].data['telescope'] = med_tel[t][p][f]
                 range_source[t][p][f].data['position'] = med_pos[t][p][f]
                 range_source[t][p][f].data['filter'] = med_fil[t][p][f]
+                range_source[t][p][f].data['count'] = med_cou[t][p][f]
 
-                if t not in range_checkbox_list[0]:
-                    empty_range(t, p, f)
-                elif p not in range_checkbox_list[1]:
-                    empty_range(t, p, f)
-                elif f not in range_checkbox_list[2]:
+                if t not in range_checkbox_list[0] \
+                        or p not in range_checkbox_list[1] \
+                        or f not in range_checkbox_list[2]:
                     empty_range(t, p, f)
 
                 if len(med_days[t][p][f]) > 0 and len(med_list[t][p][f]) > 0:
@@ -586,14 +590,17 @@ def set_range_data_source(med_days, med_list, med_err, med_tel, med_pos, med_fil
                                                             max(med_days[t][p][f]) - relativedelta(hours=1)]
                     range_span_source[t][p][f].data['h_date'] = append_twice("Median Line Statistics")
 
-                    range_span_source[t][p][f].data['y'] = append_twice(np.median(med_list[t][p][f]))
-                    range_span_source[t][p][f].data['error'] = append_twice(np.average(med_err[t][p][f]))
+                    range_span_source[t][p][f].data['y'] = \
+                        append_twice(str("{0: .2f}".format(np.median(med_list[t][p][f]))))
+                    range_span_source[t][p][f].data['error'] = \
+                        append_twice(str("{0: .2f}".format(np.average(med_err[t][p][f]))))
                     range_span_source[t][p][f].data['coverage'] = append_twice('Average: ' +
                                                                                   str(np.average(med_list[t][p][f])))
                     range_span_source[t][p][f].data['telescope'] = append_twice(
                         'Min: ' + str(min(med_list[t][p][f])))
                     range_span_source[t][p][f].data['filter'] = append_twice('Max: ' + str(max(med_list[t][p][f])))
                     range_span_source[t][p][f].data['position'] = append_twice(med_pos[t][p][f][0])
+                    range_span_source[t][p][f].data['count'] = append_twice(len(med_list[t][p][f]))
                 else:
                     range_span_source[t][p][f].data['x'] = []
                     range_span_source[t][p][f].data['h_date'] = []
@@ -603,6 +610,7 @@ def set_range_data_source(med_days, med_list, med_err, med_tel, med_pos, med_fil
                     range_span_source[t][p][f].data['coverage'] = []
                     range_span_source[t][p][f].data['telescope'] = []
                     range_span_source[t][p][f].data['filter'] = []
+                    range_span_source[t][p][f].data['count'] = []
 
 
 def update_line_span():
@@ -694,6 +702,8 @@ def range_slider_moved(attr, old, new):
                 [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]]
     temp_fil = [[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
                 [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]]
+    temp_cou = [[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
+                [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]]
     for y in range(len(range_data_list)):
         for t in range_checkbox_list[0]:
             for p in range_checkbox_list[1]:
@@ -717,15 +727,16 @@ def range_slider_moved(attr, old, new):
                                     l.append(s_)
                                     e.append(e_)
                         if len(l) > 0:
-                            temp_days[t][p][f].append(pd.to_datetime(d[0]))
-                            temp_sb[t][p][f].append(np.median(l))
-                            temp_err[t][p][f].append(np.average(e))
+                            temp_days[t][p][f].append(d[0])
+                            temp_sb[t][p][f].append(float("{0: .2f}".format(np.median(l))))
+                            temp_err[t][p][f].append(float("{0: .2f}".format(np.std(l))))
                             temp_tel[t][p][f].append(find_telescope_name(t))
                             temp_pos[t][p][f].append(find_position(p))
                             temp_fil[t][p][f].append(find_filter_name(f))
+                            temp_cou[t][p][f].append(len(l))
 
     r_label.set(text='Loading . . . .')
-    set_range_data_source(temp_days, temp_sb, temp_err, temp_tel, temp_pos, temp_fil)
+    set_range_data_source(temp_days, temp_sb, temp_err, temp_tel, temp_pos, temp_fil, temp_cou)
     r_label.set(text='Done ')
     time.sleep(1)
     r_label.set(text=' ')
@@ -742,10 +753,34 @@ def update_data_source():
                     if t not in checkbox_list[0] or f not in checkbox_list[2]:
                         empty_source(t, p, f)
                     else:
-                        cc_list[t][p][f] = coverage_list[t][p][f]
-                        set_data_source(date_list[t][p][f], data_list[t][p][f], coverage_list[t][p][f], h_list[t][p][f],
-                                   error_list[t][p][f], telescope_list[t][p][f], filter_list[t][p][f],
-                                   t, p, f)
+                        dt_, da_, co_,  ho_, er_, te_, fi_ = ([] for i in range(7))
+                        if 4 in checkbox_list[2]:
+
+                            for dt, da, co, ho, er, te, fi, mo in zip(date_list[t][p][f], data_list[t][p][f],
+                                                                      coverage_list[t][p][f], h_list[t][p][f],
+                                                                      error_list[t][p][f], telescope_list[t][p][f],
+                                                                      filter_list[t][p][f], moon_list[t][p][f]):
+                                if mo == 0:
+                                    dt_.append(dt)
+                                    da_.append(da)
+                                    co_.append(co)
+                                    ho_.append(ho)
+                                    er_.append(er)
+                                    te_.append(te)
+                                    fi_.append(fi)
+                            cc_list[t][p][f] = co_
+                            set_data_source(dt_, da_, co_, ho_, er_, te_, fi_, t, p, f)
+
+                        else:
+                            dt_ = date_list[t][p][f]
+                            da_ = data_list[t][p][f]
+                            co_ = coverage_list[t][p][f]
+                            ho_ = h_list[t][p][f]
+                            er_ = error_list[t][p][f]
+                            te_ = telescope_list[t][p][f]
+                            fi_ = filter_list[t][p][f]
+                            cc_list[t][p][f] = coverage_list[t][p][f]
+                            set_data_source(dt_, da_, co_, ho_, er_, te_, fi_, t, p, f)
 
     for t in checkbox_list[0]:
         for f in checkbox_list[2]:
@@ -922,8 +957,8 @@ def create_and_set_annotations(min_day):
     for day in moon_up_date:
         for i in range(6):
             r_and_s = find_moon_rise_set(str(day))
-            annotations[i][d].set(left=((r_and_s[0]).datetime() + timedelta(hours=2, minutes=5)).timestamp() * 1000,
-                                   right=((r_and_s[1]).datetime() + timedelta(hours=2, minutes=5)).timestamp() * 1000)
+            annotations[i][d].set(left=((r_and_s[0]).datetime() + timedelta(minutes=5)).timestamp() * 1000,
+                                   right=((r_and_s[1]).datetime() + timedelta(minutes=5)).timestamp() * 1000)
             annotations[i][d].fill_alpha = 0.1
         d += 1
 
@@ -981,7 +1016,7 @@ def create_list():
         t = d[4]
         p = d[6]
         f = find_filter_number(d[5])
-        date_list[t][p][f].append(pd.to_datetime(d[0]))
+        date_list[t][p][f].append(d[0])
         data_list[t][p][f].append(d[1])
         coverage_list[t][p][f].append(d[2])
         moon_list[t][p][f].append(d[3])
@@ -1024,14 +1059,14 @@ def create_ext_list():
         t = e[4]
         f = find_filter_number(e[3])
 
-        ext_date_list[t][f].append(pd.to_datetime(e[0]))
+        ext_date_list[t][f].append(e[0])
         ext_data_list[t][f].append(e[1])
         ext_error_list[t][f].append(e[2])
         ext_telescope_list[t][f].append(find_telescope_name(t))
         ext_filter_list[t][f].append(e[3])
         ext_h_list[t][f].append(str(e[0]))
 
-        ext_coverage_list[t][f].append(find_ext_cc(pd.to_datetime(e[0]), t, f))
+        ext_coverage_list[t][f].append(find_ext_cc(e[0], t, f))
 
 
 def create_range_list():
@@ -1160,28 +1195,19 @@ for t in range(2):
             filt_ = 'V' if f == 0 else 'B' if f == 1 else 'R' if f == 2 else 'I'
             pos_ = 'Zenith' if p == 0 else 'North' if p == 1 else 'East' if p == 2 else 'West' if p == 3 else 'South'
             col_ = set_colour_range(t, p, f)
-            if t == 0:
-                range_plot.line(source=range_source[t][p][f], x='x', y='y', line_width=3,
-                                line_color=col_, legend=tel_ + ' ' + pos_)
-            if t == 1:
-                range_plot.line(source=range_source[t][p][f], x='x', y='y', line_width=2, line_color=col_,
-                                line_dash=[15, 2], legend=tel_ + ' ' + pos_)
 
             if f == 0:
-                range_plot.circle(source=range_source[t][p][f], x='x', y='y', line_width=1, color=col_,
-                                  fill_color = None, legend=' filter ' + filt_)
+                fig0 = range_plot.circle(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_,
+                                  fill_color=None)
 
             if f == 1:
-                range_plot.triangle(source=range_source[t][p][f], x='x', y='y', line_width=3, color=col_,
-                                    legend=' filter ' + filt_)
+                fig1 = range_plot.triangle(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_)
             if f == 2:
-                range_plot.diamond(source=range_source[t][p][f], x='x', y='y', line_width=3, color=col_,
-                                   legend=' filter ' + filt_)
+                fig2 = range_plot.diamond(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_)
             if f == 3:
-                range_plot.square(source=range_source[t][p][f], x='x', y='y', line_width=1,  color=col_,
-                                  fill_color=None, legend=' filter ' + filt_)
-            range_plot.line(source=range_span_source[t][p][f], x='x', y='y', line_width=0.1, line_dash=[6, 6],
-                            color=col_)
+                fig3 = range_plot.square(source=range_source[t][p][f], x='x', y='y', line_width=5,  color=col_,
+                                  fill_color=None)
+            range_plot.line(source=range_span_source[t][p][f], x='x', y='y', line_width=0.1, color=col_)
 
             range_plot.legend.location = 'bottom_right'
             range_plot.legend.background_fill_alpha = 0.4
@@ -1240,11 +1266,7 @@ wid_day_r = widgetbox(range_day_min, range_day_max, range_submit_btn, width=100,
 # ==========Widget Box==============================================================================================
 #
 # ==========View====================================================================================================
-"""
-date_tab = column(row(gridplot([wid_year, wid_month, wid_day, ], ncols=3, plot_width=105),
-                      message_plot),
-                  row())
-"""
+
 date_tab = layout([[dev_col, wid_year, wid_month, wid_day, message_plot],
                    [gridplot(plot[0], plot[1],
                              plot[2], plot[3],
@@ -1252,6 +1274,14 @@ date_tab = layout([[dev_col, wid_year, wid_month, wid_day, message_plot],
                              ncols=2, spacing=150,
                              plot_width=570, plot_height=250),
                     inputs]])
+
+legend = Legend(legends=[
+                ('Filter V', [fig0]),
+                ('Filter B', [fig1]),
+                ('Filter R', [fig2]),
+                ('Filter I', [fig3])
+                ], location=(0, -30))
+range_plot.add_layout(legend, 'left')
 
 
 range_tab = layout([[r_dev_col, wid_year_r, wid_month_r, wid_day_r, r_message_plot], [range_plot, range_inputs]])
@@ -1264,3 +1294,4 @@ tabs = Tabs(tabs=[tab1, tab2])
 # ==========Serve===================================================================================================
 curdoc().add_root(tabs)
 curdoc().title = "SkyBrightness"
+
