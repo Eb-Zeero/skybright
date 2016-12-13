@@ -26,15 +26,6 @@ def empty_source(t, p, f):
     data_source[t][p][f].data['telescope'] = []
 
 
-def empty_ext(t, f):
-    ext_source[t][f].data['x'] = []
-    ext_source[t][f].data['h_date'] = []
-    ext_source[t][f].data['y'] = []
-    ext_source[t][f].data['error'] = []
-    ext_source[t][f].data['filter'] = []
-    ext_source[t][f].data['telescope'] = []
-
-
 def empty_range(t, p, f):
     range_source[t][p][f].data['x'] = []
     range_source[t][p][f].data['h_date'] = []
@@ -182,32 +173,6 @@ def read_database(date_, num):
         return data
 
 
-def read_extinction_database(date_, num):
-    ext_data = []
-    date_n = date_ + timedelta(days=1)
-    if num == 7:
-        date_ = date_n - timedelta(days=num)
-
-    select_ext = (
-                     "SELECT DATE_TIME, EXTINCTION, EXT_ERROR, FILTER_BAND, TELESCOPE, CLOUD_COVERAGE "
-                     "FROM Extinctions_Red WHERE DATE_TIME > '%s-%s-%s 13:00:00' AND DATE_TIME < '%s-%s-%s 13:00:00' "
-                 ) % (str(date_)[0:4], str(date_)[5:7], str(date_)[8:10],
-                      str(date_n)[0:4], str(date_n)[5:7], str(date_n)[8:10])
-    cnx = pymysql.connect(**config)
-    try:
-        cursor = cnx.cursor()
-        cursor.execute(select_ext)
-        ext_data = cursor.fetchall()
-    except:
-        if cnx:
-            print("there was a problem with selecting")
-
-    finally:
-        if cnx:
-            cnx.close()
-            return ext_data
-
-
 def read_range_database(min_date, max_date):
     range_data = []
     select_sb = (
@@ -346,15 +311,6 @@ for t in range(2):
             span_source[t][p].append(ColumnDataSource(data=dict(x=[], h_date=[], y=[], coverage=[], telescope=[],
                                                                 filter=[])))
 
-ext_source = [[], []]
-ext_span_source = [[], []]
-for et in range(2):
-    for ef in range(4):
-        ext_source[et].append(ColumnDataSource(data=dict(x=[], y=[], alpha=[], h_date=[], error=[],
-                                                         telescope=[], filter=[])))
-        ext_span_source[et].append(ColumnDataSource(data=dict(x=[], h_date=[], y=[], coverage=[],
-                                                              telescope=[], filter=[])))
-
 range_source = [[[], [], [], [], []], [[], [], [], [], []]]
 range_span_source = [[[], [], [], [], []], [[], [], [], [], []]]
 
@@ -375,28 +331,6 @@ d_source = ColumnDataSource(data=dict(value=[30]))
     Plots
 '''
 
-ext_hover = HoverTool(
-    tooltips="""
-            <div>
-                <div>
-                    <span style="font-size: 17px; font-weight: bold;">@h_date</span>
-                </div>
-                <div>
-                    <span style="font-size: 17px;">EXT: </span>
-                    <span style="font-size: 17px; font-weight: bold;">@y </span>
-                    <span style="font-size: 17px; color: #966;">  [error: </span>
-                    <span style="font-size: 17px; color: #966;"> @error]</span>
-                </div>
-                <div>
-                    <span style="font-size: 18px; font-weight: bold;">@telescope</span>
-                    <span style="font-size: 17px; color: #669; font-weight: bold;"> @filter </span>
-                </div>
-            </div>
-            """
-)
-ext_hover.point_policy = "snap_to_data"
-ext_hover.line_policy = "interp"
-
 tool_list = "pan,reset,save,wheel_zoom, box_zoom"
 range_hover = HoverTool(
     tooltips="""
@@ -409,7 +343,8 @@ range_hover = HoverTool(
             </div>
             <div>
                 <span style="font-size: 15px; font-weight: bold;">SB: </span>
-                <span style="font-size: 15px;">@y +/-@error </span>
+                <span style="font-size: 15px; color: #669;">@y </span>
+                <span style="font-size: 15px; color: #966;">+/-@error </span>
             </div>
             <div>
                 <span style="font-size: 15px; color: #969;">@telescope</span>
@@ -438,9 +373,8 @@ for i in range(5):
                 </div>
                 <div>
                     <span style="font-size: 17px;">SB: </span>
-                    <span style="font-size: 17px; font-weight: bold;">@y </span>
-                    <span style="font-size: 17px; color: #966;"> +/- </span>
-                    <span style="font-size: 17px; color: #966;"> @error</span>
+                    <span style="font-size: 17px; color: #669; font-weight: bold;">@y </span>
+                    <span style="font-size: 17px; color: #966;">+/-@error </span>
                 </div>
                 <div>
                     <span style="font-size: 18px; font-weight: bold;">@telescope</span>
@@ -452,11 +386,22 @@ for i in range(5):
     hover[i].point_policy = "follow_mouse"
     hover[i].line_policy = "interp"
     tit_ = find_tittle(i)
-    plt = figure(title=tit_,
-                 toolbar_location='above',
-                 tools=[tool_list],
-                 x_axis_type="datetime",
-                 background_fill_alpha=0.09)
+    if i == 0:
+        plt = figure(title=tit_,
+                     toolbar_location='above',
+                     tools=[tool_list],
+                     x_axis_type="datetime",
+                     background_fill_alpha=0.09,
+                     plot_width=1140, plot_height=350
+                     )
+    else:
+        plt = figure(title=tit_,
+                     toolbar_location='above',
+                     tools=[tool_list],
+                     x_axis_type="datetime",
+                     background_fill_alpha=0.09,
+                     plot_width=570, plot_height=250)
+
     plot.append(plt)
     plot[i].xaxis.major_label_orientation = pi / 4
     plot[i].ygrid.grid_line_color = None
@@ -467,19 +412,7 @@ for i in range(5):
     plot[i].border_fill_color = "#f4f4f4"
     plot[i].min_border = 30
     plot[i].x_range = plot[0].x_range
-
-ext_plot = figure(title="Extinctions",
-                  tools=[tool_list, ext_hover],
-                  x_axis_type="datetime",
-                  background_fill_alpha=0.09, x_range=plot[0].x_range)
-ext_plot.xaxis.major_label_orientation = pi / 4
-ext_plot.ygrid.grid_line_color = None
-ext_plot.title.text_font_size = "25px"
-ext_plot.title.align = "center"
-ext_plot.title.text_color = "navy"
-ext_plot.border_fill_color = '#f4f4f4'
-ext_plot.min_border = 30
-
+    plot[i].y_range = plot[0].y_range
 
 range_plot = figure(plot_height=500, plot_width=1100,
                     title="Range",
@@ -495,13 +428,10 @@ range_plot.min_border = 30
 range_plot.toolbar_location = 'above'
 range_plot.xaxis.major_label_orientation = pi / 4
 
-for i in range(6):
+for i in range(5):
     for d in range(10):
-        annotations[i].append(BoxAnnotation(fill_color='yellow'))
-        if i != 5:
-            plot[i].renderers.extend([annotations[i][d]])
-        else:
-            ext_plot.renderers.extend([annotations[i][d]])
+        annotations[i].append(BoxAnnotation(fill_color='green'))
+        plot[i].renderers.extend([annotations[i][d]])
 
 
 def msg_plot():
@@ -536,7 +466,6 @@ msg_plot()
 date_ = selector_to_date(year_.value, month_.value, day_.value)
 
 data = read_database(date_, 1)
-ext_data = read_extinction_database(date_, 1)
 range_data = read_range_database([range_year_min.value, range_month_min.value, range_day_min.value],
                                     [range_year_max.value, range_month_max.value, range_day_max.value])
 
@@ -546,23 +475,12 @@ range_data = read_range_database([range_year_min.value, range_month_min.value, r
 def set_data_source(dte_, sb_, cc_, h_date, err_, tl_, fil_, t, p, f):
     global data_source
     data_source[t][p][f].data['x'] = dte_
-    data_source[t][p][f].data['y'] = sb_
+    data_source[t][p][f].data['y'] = ["{0: .2f}".format(float(d_)) for d_ in sb_]
     data_source[t][p][f].data['coverage'] = cc_
     data_source[t][p][f].data['h_date'] = [str(d_ - timedelta(hours=2)) for d_ in dte_]
-    data_source[t][p][f].data['error'] = err_
+    data_source[t][p][f].data['error'] = ["{0: .2f}".format(float(d_)) for d_ in err_]
     data_source[t][p][f].data['telescope'] = tl_
     data_source[t][p][f].data['filter'] = fil_
-
-
-def set_ext_source(dte_, ext_, err_, cc_, h_date, tle_, fil_, t, f):
-    global ext_source
-    ext_source[t][f].data['x'] = dte_
-    ext_source[t][f].data['y'] = ext_
-    ext_source[t][f].data['error'] = err_
-    ext_source[t][f].data['coverage'] = cc_
-    ext_source[t][f].data['h_date'] = [str(d_ - timedelta(hours=2)) for d_ in dte_]
-    ext_source[t][f].data['telescope'] = tle_
-    ext_source[t][f].data['filter'] = fil_
 
 
 def set_range_data_source(med_days, med_list, med_err, med_tel, med_pos, med_fil, med_cou):
@@ -572,9 +490,9 @@ def set_range_data_source(med_days, med_list, med_err, med_tel, med_pos, med_fil
         for p in range(5):
             for f in range(4):
                 range_source[t][p][f].data['x'] = med_days[t][p][f]
-                range_source[t][p][f].data['h_date'] = [str(d_ )[:10] for d_ in med_days[t][p][f]]
-                range_source[t][p][f].data['y'] = med_list[t][p][f]
-                range_source[t][p][f].data['error'] = med_err[t][p][f]
+                range_source[t][p][f].data['h_date'] = [str(d_)[:10] for d_ in med_days[t][p][f]]
+                range_source[t][p][f].data['y'] = ["{0: .2f}".format(float(d_)) for d_ in med_list[t][p][f]]
+                range_source[t][p][f].data['error'] = ["{0: .2f}".format(float(d_)) for d_ in med_err[t][p][f]]
                 range_source[t][p][f].data['telescope'] = med_tel[t][p][f]
                 range_source[t][p][f].data['position'] = med_pos[t][p][f]
                 range_source[t][p][f].data['filter'] = med_fil[t][p][f]
@@ -586,8 +504,8 @@ def set_range_data_source(med_days, med_list, med_err, med_tel, med_pos, med_fil
                     empty_range(t, p, f)
 
                 if len(med_days[t][p][f]) > 0 and len(med_list[t][p][f]) > 0:
-                    range_span_source[t][p][f].data['x'] = [min(med_days[t][p][f]) - relativedelta(hours=1),
-                                                            max(med_days[t][p][f]) - relativedelta(hours=1)]
+                    range_span_source[t][p][f].data['x'] = [min(med_days[t][p][f]) - relativedelta(days=1),
+                                                            max(med_days[t][p][f]) + relativedelta(days=1)]
                     range_span_source[t][p][f].data['h_date'] = append_twice("Median Line Statistics")
 
                     range_span_source[t][p][f].data['y'] = \
@@ -614,26 +532,26 @@ def set_range_data_source(med_days, med_list, med_err, med_tel, med_pos, med_fil
 
 
 def update_line_span():
-    global data_source, ext_source
+    global data_source
     for t in range(2):
         for p in range(5):
             for f in range(4):
                 temp_list = []
-                temp_err = []
-                for y, a, e in zip(data_source[t][p][f].data['y'], data_source[t][p][f].data['alpha'],
-                                   data_source[t][p][f].data['error']):
+                # temp_err = []
+                for y, a in zip(data_source[t][p][f].data['y'], data_source[t][p][f].data['alpha']):
+                    # data_source[t][p][f].data['error']):
                     if a == 1:
-                        temp_list.append(y)
-                        temp_err.append(e)
+                        temp_list.append(float(y))
+                        # temp_err.append(e)
 
-                sday = [min(date_list[t][p][f]) - relativedelta(hours=1),
-                        max(date_list[t][p][f]) + relativedelta(hours=1)] if len(date_list[t][p][f]) > 0 else []
+                sday = [min(date_list[t][p][f]) - relativedelta(minutes=10),
+                        max(date_list[t][p][f]) + relativedelta(minutes=10)] if len(date_list[t][p][f]) > 0 else []
                 shd = append_twice("Median line statistics") if len(temp_list) > 0 else []
-                smed = append_twice(np.median(temp_list)) if len(temp_list) > 0 else []
-                savg = append_twice(np.average(temp_err)) if len(temp_list) > 0 else []
-                scov = append_twice('Avg: ' + str(np.average(temp_list))) if len(temp_list) > 0 else []
-                smin = append_twice('Min: ' + str(min(temp_list))) if len(temp_list) > 0 else []
-                smax = append_twice('Max: ' + str(max(temp_list))) if len(temp_list) > 0 else []
+                smed = append_twice("{0: .2f}".format(np.median(temp_list))) if len(temp_list) > 0 else []
+                savg = append_twice("{0: .2f}".format(np.std(temp_list))) if len(temp_list) > 0 else []
+                scov = append_twice('Avg: ' + "{0: .2f}".format((np.average(temp_list)))) if len(temp_list) > 0 else []
+                smin = append_twice('Min: ' + "{0: .2f}".format((min(temp_list)))) if len(temp_list) > 0 else []
+                smax = append_twice('Max: ' + "{0: .2f}".format((max(temp_list)))) if len(temp_list) > 0 else []
 
                 span_source[t][p][f].data['x'] = sday
                 span_source[t][p][f].data['h_date'] = shd
@@ -643,33 +561,6 @@ def update_line_span():
                 span_source[t][p][f].data['telescope'] = smin
                 span_source[t][p][f].data['filter'] = smax
 
-    for t in range(2):
-        for f in range(4):
-            temp_list = []
-            temp_err = []
-            for y, a, e, in zip(ext_source[t][f].data['y'], ext_source[t][f].data['alpha'],
-                                ext_source[t][f].data['error']):
-                if a == 1:
-                    temp_list.append(y)
-                    temp_err.append(e)
-
-            sday = [min(date_list[t][p][f]) - relativedelta(hours=1),
-                    max(date_list[t][p][f]) + relativedelta(hours=1)] if len(date_list[t][p][f]) > 0 else []
-            shd = append_twice("Median line statistics") if len(temp_list) > 0 else []
-            smed = append_twice(np.median(temp_list)) if len(temp_list) > 0 else []
-            savg = append_twice(np.average(temp_err)) if len(temp_list) > 0 else []
-            scov = append_twice('Avg: ' + str(np.average(temp_list))) if len(temp_list) > 0 else []
-            smin = append_twice('Min: ' + str(min(temp_list))) if len(temp_list) > 0 else []
-            smax = append_twice('Max: ' + str(max(temp_list))) if len(temp_list) > 0 else []
-
-            ext_span_source[t][f].data['x'] = sday
-            ext_span_source[t][f].data['h_date'] = shd
-            ext_span_source[t][f].data['y'] = smed
-            ext_span_source[t][f].data['error'] = savg
-            ext_span_source[t][f].data['coverage'] = scov
-            ext_span_source[t][f].data['telescope'] = smin
-            ext_span_source[t][f].data['filter'] = smax
-
 
 def slider_moved(attr, old, new):
     cc = d_source.data['value'][0]
@@ -678,11 +569,6 @@ def slider_moved(attr, old, new):
             for f in range(4):
                 if len(coverage_list[t][p][f]) > 0:
                     data_source[t][p][f].data['alpha'] = [1 if c <= cc else 0.1 for c in cc_list[t][p][f]]
-
-    for et in range(2):
-        for ef in range(4):
-            if len(ext_coverage_list[et][ef]) > 0:
-                ext_source[et][ef].data['alpha'] = [1 if c <= cc else 0.1 for c in ext_coverage_list[et][ef]]
 
     update_line_span()
 
@@ -743,8 +629,7 @@ def range_slider_moved(attr, old, new):
 
 
 def update_data_source():
-    global data_source, ext_source, date_list, h_list, data_list, error_list, telescope_list, filter_list,\
-        ext_date_list, ext_data_list, ext_error_list, ext_filter_list, ext_telescope_list, ext_h_list, checkbox_list,\
+    global data_source, date_list, h_list, data_list, error_list, telescope_list, filter_list, checkbox_list,\
         coverage_list
     for t in range(2):
         for p in range(5):
@@ -782,13 +667,6 @@ def update_data_source():
                             cc_list[t][p][f] = coverage_list[t][p][f]
                             set_data_source(dt_, da_, co_, ho_, er_, te_, fi_, t, p, f)
 
-    for t in checkbox_list[0]:
-        for f in checkbox_list[2]:
-            if f != 4:
-                set_ext_source(ext_date_list[t][f], ext_data_list[t][f], ext_error_list[t][f], ext_coverage_list[t][f],
-                               ext_h_list[t][f], ext_telescope_list[t][f], ext_filter_list[t][f],
-                               t, f)
-
 
 def button_clicked():
     global data, ext_data
@@ -796,8 +674,6 @@ def button_clicked():
     d_label.set(text='Loading . ')
     date_ = selector_to_date(year_.value, month_.value, day_.value)
     data = read_database(date_, 1)
-    d_label.set(text='Loading . . ')
-    ext_data = read_extinction_database(date_, 1)
     d_label.set(text='Loading . . .')
     create_list()
     d_label.set(text='Loading . . . .')
@@ -819,14 +695,12 @@ def button_clicked():
 
 
 def week_button_clicked():
-    global data, ext_data, data_list
+    global data, data_list
     is_data = False
     d_label.set(text='Loading . ')
     date_ = selector_to_date(year_.value, month_.value, day_.value)
     data = read_database(date_, 7)
     d_label.set(text='Loading . . ')
-    ext_data = read_extinction_database(date_, 7)
-    d_label.set(text='Loading . . . ')
     create_list()
     update_data_source()
     d_label.set(text='Loading . ')
@@ -950,15 +824,15 @@ def create_and_set_annotations(min_day):
     global annotations, fail
     moon_up_date = [min_day + timedelta(d) for d in range(10)]
 
-    for i in range(6):
+    for i in range(5):
         for d in range(8):
             annotations[i][d].fill_alpha = 0
     d = 0
     for day in moon_up_date:
-        for i in range(6):
+        for i in range(5):
             r_and_s = find_moon_rise_set(str(day))
-            annotations[i][d].set(left=((r_and_s[0]).datetime() + timedelta(minutes=5)).timestamp() * 1000,
-                                   right=((r_and_s[1]).datetime() + timedelta(minutes=5)).timestamp() * 1000)
+            annotations[i][d].set(left=((r_and_s[0]).datetime()).timestamp() * 1000,
+                                  right=((r_and_s[1]).datetime()).timestamp() * 1000)
             annotations[i][d].fill_alpha = 0.1
         d += 1
 
@@ -988,28 +862,6 @@ def create_list():
     filter_list = [[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
                  [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]]
 
-    '''
-    date_list = append_twice([[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
-                     [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]])
-
-    h_list = append_twice([[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
-                  [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]])
-
-    data_list = append_twice([[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
-                     [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]])
-    error_list = append_twice([[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
-                      [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]])
-    coverage_list = append_twice([[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
-                         [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]])
-    cc_list = append_twice([[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
-                   [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]])
-    moon_list = append_twice([[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
-                     [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]])
-    telescope_list = append_twice([[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
-                          [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]])
-    filter_list = append_twice([[[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]],
-                       [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]]])
-    '''
 
     box_ano = []
     for d in data:
@@ -1020,53 +872,16 @@ def create_list():
         data_list[t][p][f].append(d[1])
         coverage_list[t][p][f].append(d[2])
         moon_list[t][p][f].append(d[3])
-        error_list[t][p][f].append(d[7])
+        error_list[t][p][f].append("{0: .2f}".format(float(d[7])))
         telescope_list[t][p][f].append(find_telescope_name(t))
         filter_list[t][p][f].append(d[5])
         h_list[t][p][f].append(str(d[0]))
 
         if d[3] == 1:
             box_ano.append((d[0]))
-
-    d_label.set(text='Loading . . . .')
-    create_ext_list()
     d_label.set(text='Loading . . . . . ')
     if len(box_ano) > 0:
         create_and_set_annotations(min(box_ano) - relativedelta(days=1))
-
-
-def create_ext_list():
-    global ext_date_list, ext_data_list, ext_error_list, ext_coverage_list, ext_filter_list, \
-        ext_telescope_list, ext_h_list, ext_data
-
-    ext_date_list = [[[], [], [], []], [[], [], [], []]]
-    ext_data_list = [[[], [], [], []], [[], [], [], []]]
-    ext_error_list = [[[], [], [], []], [[], [], [], []]]
-    ext_coverage_list = [[[], [], [], []], [[], [], [], []]]
-    ext_telescope_list = [[[], [], [], []], [[], [], [], []]]
-    ext_filter_list = [[[], [], [], []], [[], [], [], []]]
-    ext_h_list = [[[], [], [], []], [[], [], [], []]]
-
-    def find_ext_cc(date_, t, f):
-        cc_ = 200
-        p = 0
-        for sdate_, cov_ in zip(date_list[t][p][f], coverage_list[t][p][f]):
-            if sdate_ - relativedelta(minutes=1) <= date_ <= sdate_ + relativedelta(minutes=1):
-                return cov_
-        return cc_
-    for e in ext_data:
-        # DATE_TIME[0], EXTINCTION[1], EXT_ERROR[2], FILTER_BAND[3], TELESCOPE[4], CLOUD_COVERAGE[5]
-        t = e[4]
-        f = find_filter_number(e[3])
-
-        ext_date_list[t][f].append(e[0])
-        ext_data_list[t][f].append(e[1])
-        ext_error_list[t][f].append(e[2])
-        ext_telescope_list[t][f].append(find_telescope_name(t))
-        ext_filter_list[t][f].append(e[3])
-        ext_h_list[t][f].append(str(e[0]))
-
-        ext_coverage_list[t][f].append(find_ext_cc(e[0], t, f))
 
 
 def create_range_list():
@@ -1175,18 +990,8 @@ for t in range(2):
                 plot[p].circle(source=data_source[t][p][f], x='x', y='y', line_width=2, color=col_, alpha='alpha')
             if t == 1:
                 plot[p].diamond(source=data_source[t][p][f], x='x', y='y', line_width=2, color=col_, alpha='alpha')
-            plot[p].line(source=span_source[t][p][f], x='x', y='y', line_width=0.1, color=col_)
+            plot[p].line(source=span_source[t][p][f], x='x', y='y', line_width=1, color=col_)
 
-for t in range(2):
-    for f in range(4):
-        col_ = set_colour(t, f)
-
-        if t == 0:
-            ext_plot.circle(source=ext_source[t][f], x='x', y='y', line_width=2, color=col_, alpha='alpha')
-        if t == 1:
-            ext_plot.diamond(source=ext_source[t][f], x='x', y='y', line_width=2, color=col_, alpha='alpha')
-
-        ext_plot.line(source=ext_span_source[t][f], x='x', y='y', line_width=0.1, color=col_)
 
 for t in range(2):
     tel_ = 'Sunrise' if t == 0 else 'Sunset'
@@ -1195,19 +1000,17 @@ for t in range(2):
             filt_ = 'V' if f == 0 else 'B' if f == 1 else 'R' if f == 2 else 'I'
             pos_ = 'Zenith' if p == 0 else 'North' if p == 1 else 'East' if p == 2 else 'West' if p == 3 else 'South'
             col_ = set_colour_range(t, p, f)
-
             if f == 0:
                 fig0 = range_plot.circle(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_,
-                                  fill_color=None)
-
+                                         fill_color=None)
             if f == 1:
                 fig1 = range_plot.triangle(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_)
             if f == 2:
                 fig2 = range_plot.diamond(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_)
             if f == 3:
                 fig3 = range_plot.square(source=range_source[t][p][f], x='x', y='y', line_width=5,  color=col_,
-                                  fill_color=None)
-            range_plot.line(source=range_span_source[t][p][f], x='x', y='y', line_width=0.1, color=col_)
+                                         fill_color=None)
+            range_plot.line(source=range_span_source[t][p][f], x='x', y='y', line_width=1, color=col_)
 
             range_plot.legend.location = 'bottom_right'
             range_plot.legend.background_fill_alpha = 0.4
@@ -1257,7 +1060,7 @@ wid_year = widgetbox(year_, week_btn, width=110, height=60)
 wid_month = widgetbox(month_, width=100, height=60)
 wid_day = widgetbox(day_, submit_btn, width=100, height=60)
 
-dev_col = column( start_div)
+dev_col = column(start_div)
 r_dev_col = column(range_start_div, range_end_div)
 
 wid_year_r = widgetbox(range_year_min, range_year_max, width=110, height=50)
@@ -1268,11 +1071,10 @@ wid_day_r = widgetbox(range_day_min, range_day_max, range_submit_btn, width=100,
 # ==========View====================================================================================================
 
 date_tab = layout([[dev_col, wid_year, wid_month, wid_day, message_plot],
-                   [gridplot(plot[0], plot[1],
-                             plot[2], plot[3],
-                             plot[4], ext_plot,
-                             ncols=2, spacing=150,
-                             plot_width=570, plot_height=250),
+                   [gridplot([plot[0]],
+                             [plot[1], plot[2]],
+                             [plot[3], plot[4]],
+                             spacing=150),
                     inputs]])
 
 legend = Legend(legends=[
