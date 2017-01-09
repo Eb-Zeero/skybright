@@ -65,26 +65,26 @@ def find_filter_name(num_):
     return char_
 
 
-def find_position(p):
-    return 'Zenith' if p == 0 else 'North' if p == 1 else 'East' if p == 2 else 'West' if p == 3 else 'South'
+def find_position(po):
+    return 'Zenith' if po == 0 else 'South' if po == 1 else 'East' if po == 2 else 'North' if po == 3 else 'West'
 
 
 def find_tittle(num_):
-    return 'Zenith' if num_ == 0 else 'North' if num_ == 1 else 'East' if num_ == 2 else 'West' if num_ == 3 \
-        else 'South'
+    return 'Zenith' if num_ == 0 else 'South' if num_ == 1 else 'East' if num_ == 2 else 'North' if num_ == 3 \
+        else 'West'
 
 
-def find_telescope_name(tel_):
-    return 'Sunrise' if tel_ == 0 else 'Sunset'
+def find_telescope_name(tel):
+    return 'Sunrise' if tel == 0 else 'Sunset'
 
 
-def set_colour(tel_, fil_):
-    col_ = 'black'
-    if tel_ == 0:
-        col_ = 'brown' if fil_ == 0 else 'blue' if fil_ == 1 else '#c615f2' if fil_ == 2 else 'green'
-    if tel_ == 1:
-        col_ = '#f2155f' if fil_ == 0 else '#07a9bf' if fil_ == 1 else '#f4ac02' if fil_ == 2 else '#02ce24'
-    return col_
+def set_colour(tel, fil_):
+    co = 'black'
+    if tel == 0:
+        co = 'brown' if fil_ == 0 else 'blue' if fil_ == 1 else '#c615f2' if fil_ == 2 else 'green'
+    if tel == 1:
+        co = '#f2155f' if fil_ == 0 else '#07a9bf' if fil_ == 1 else '#f4ac02' if fil_ == 2 else '#02ce24'
+    return co
 
 
 def set_colour_range(tel_, pos_, fil_):
@@ -216,7 +216,7 @@ def find_moon_rise_set(date_):
     end_twilight = suth.next_setting(ephem.Moon(), use_center=True)  # End civil twilight
     if end_twilight < beg_twilight:
         beg_twilight = suth.previous_rising(ephem.Moon(), use_center=True)
-    rise_set = [beg_twilight, end_twilight]
+    rise_set = [beg_twilight + relativedelta(hours=2), end_twilight + relativedelta(hours=2)]
     return rise_set
 
 
@@ -276,7 +276,7 @@ telescope_group = CheckboxGroup(labels=["Sunrise", "Sunset"], active=[0, 1])
 filter_group = CheckboxGroup(labels=["V", "B", "R", "I", "Exclude moon"], active=[0])
 
 range_telescope_group = CheckboxGroup(labels=['Sunrise', 'Sunset'], active=[0, 1])
-range_position_group = CheckboxGroup(labels=["Zenith", "North", "East", "West", "South"], active=[0])
+range_position_group = CheckboxGroup(labels=["Zenith", "South", "East", "North", "West"], active=[0])
 range_filter_group = CheckboxGroup(labels=["V", "B", "R", "I", "Exclude moon"], active=[0])
 
 # sliders =========================================================================================================
@@ -474,10 +474,10 @@ range_data = read_range_database([range_year_min.value, range_month_min.value, r
 
 def set_data_source(dte_, sb_, cc_, h_date, err_, tl_, fil_, t, p, f):
     global data_source
-    data_source[t][p][f].data['x'] = dte_
+    data_source[t][p][f].data['x'] = [d_ + timedelta(hours=2) for d_ in dte_]
     data_source[t][p][f].data['y'] = ["{0: .2f}".format(float(d_)) for d_ in sb_]
     data_source[t][p][f].data['coverage'] = cc_
-    data_source[t][p][f].data['h_date'] = [str(d_ - timedelta(hours=2)) for d_ in dte_]
+    data_source[t][p][f].data['h_date'] = [str(d_) for d_ in dte_]
     data_source[t][p][f].data['error'] = ["{0: .2f}".format(float(d_)) for d_ in err_]
     data_source[t][p][f].data['telescope'] = tl_
     data_source[t][p][f].data['filter'] = fil_
@@ -998,7 +998,7 @@ for t in range(2):
     for p in range(5):
         for f in range(4):
             filt_ = 'V' if f == 0 else 'B' if f == 1 else 'R' if f == 2 else 'I'
-            pos_ = 'Zenith' if p == 0 else 'North' if p == 1 else 'East' if p == 2 else 'West' if p == 3 else 'South'
+            pos_ = find_position(p)
             col_ = set_colour_range(t, p, f)
             if f == 0:
                 fig0 = range_plot.circle(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_,
