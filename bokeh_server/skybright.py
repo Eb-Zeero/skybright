@@ -39,13 +39,6 @@ def empty_range(t, p, f):
 conf = configparser.ConfigParser()
 conf.read('$HOME/skybright/bokeh_server/none_plots/setter.ini')
 try:
-    config = {
-        'user': conf['MYSQL']['user'],
-        'passwd': conf['MYSQL']['passwd'],
-        'host': conf['MYSQL']['host'],
-        'db': conf['MYSQL']['db'],
-    }
-
     env_file = "$HOME/skybright/.env"
     env_var = []
 
@@ -53,9 +46,11 @@ try:
     pa = ""
     ho = ""
     da = ""
+    print(env_file)
     with open(env_file) as env:
         for line in env:
             env_var.append([str(n) for n in line.strip().split('=')])
+    print(env_var)
     for pair in env_var:
         try:
             key, value = pair[0], pair[1]
@@ -69,6 +64,7 @@ try:
                 da = value
         except IndexError:
             print("A line in the file doesn't have enough entries.")
+    print(da, ho, pa, us)
 
     config = {
         'user': us,
