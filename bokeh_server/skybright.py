@@ -46,6 +46,38 @@ try:
         'db': conf['MYSQL']['db'],
     }
 
+    env_file = "$HOME/skybright/.env"
+    env_var = []
+
+    us = ""
+    pa = ""
+    ho = ""
+    da = ""
+    with open(env_file) as env:
+        for line in env:
+            env_var.append([str(n) for n in line.strip().split('=')])
+    for pair in env_var:
+        try:
+            key, value = pair[0], pair[1]
+            if key == "SKY_DATABASE_USER":
+                us = value
+            if key == "SKY_DATABASE_PASSWORD":
+                pa = value
+            if key == "SKY_DATABASE_HOST":
+                ho = value
+            if key == "SKY_DATABASE_NAME":
+                da = value
+        except IndexError:
+            print("A line in the file doesn't have enough entries.")
+
+    config = {
+        'user': us,
+        'passwd': pa,
+        'host': ho,
+        'db': da,
+    }
+
+
 except:
     config = {
         'user': os.environ['SKY_DATABASE_USER'],
