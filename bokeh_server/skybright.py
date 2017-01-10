@@ -39,14 +39,11 @@ def empty_range(t, p, f):
 conf = configparser.ConfigParser()
 conf.read('$HOME/skybright/bokeh_server/none_plots/setter.ini')
 try:
-    env_file = "$HOME/skybright/.env"
+    env_file = "/home/deploy/skybright/.env"
+    #
     env_var = []
 
-    us = ""
-    pa = ""
-    ho = ""
-    da = ""
-    print(env_file)
+    us, pa, ho, da = "", "", "", ""
     with open(env_file) as env:
         for line in env:
             env_var.append([str(n) for n in line.strip().split('=')])
@@ -64,7 +61,6 @@ try:
                 da = value
         except IndexError:
             print("A line in the file doesn't have enough entries.")
-    print(da, ho, pa, us)
 
     config = {
         'user': us,
@@ -75,6 +71,7 @@ try:
 
 
 except:
+
     config = {
         'user': os.environ['SKY_DATABASE_USER'],
         'passwd': os.environ['SKY_DATABASE_PASSWORD'],
@@ -244,7 +241,7 @@ def find_moon_rise_set(date_):
     end_twilight = suth.next_setting(ephem.Moon(), use_center=True)  # End civil twilight
     if end_twilight < beg_twilight:
         beg_twilight = suth.previous_rising(ephem.Moon(), use_center=True)
-    rise_set = [beg_twilight + relativedelta(hours=2), end_twilight + relativedelta(hours=2)]
+    rise_set = [beg_twilight, end_twilight]
     return rise_set
 
 
@@ -572,8 +569,8 @@ def update_line_span():
                         temp_list.append(float(y))
                         # temp_err.append(e)
 
-                sday = [min(date_list[t][p][f]) - relativedelta(minutes=10),
-                        max(date_list[t][p][f]) + relativedelta(minutes=10)] if len(date_list[t][p][f]) > 0 else []
+                sday = [min(date_list[t][p][f]) - relativedelta(minutes=10) + relativedelta(hours=2),
+                        max(date_list[t][p][f]) + relativedelta(hours=2, minutes=10)] if len(date_list[t][p][f]) > 0 else []
                 shd = append_twice("Median line statistics") if len(temp_list) > 0 else []
                 smed = append_twice("{0: .2f}".format(np.median(temp_list))) if len(temp_list) > 0 else []
                 savg = append_twice("{0: .2f}".format(np.std(temp_list))) if len(temp_list) > 0 else []
@@ -858,9 +855,9 @@ def create_and_set_annotations(min_day):
     d = 0
     for day in moon_up_date:
         for i in range(5):
-            r_and_s = find_moon_rise_set(str(day))
-            annotations[i][d].set(left=((r_and_s[0]).datetime()).timestamp() * 1000,
-                                  right=((r_and_s[1]).datetime()).timestamp() * 1000)
+            r_and_s = find_moon_rise_set(str(day + relativedelta(hours=2)))
+            annotations[i][d].set(left=((r_and_s[0]).datetime() + relativedelta(hours=2)).timestamp() * 1000,
+                                  right=((r_and_s[1]).datetime() + relativedelta(hours=2)).timestamp() * 1000)
             annotations[i][d].fill_alpha = 0.1
         d += 1
 
