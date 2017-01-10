@@ -47,7 +47,6 @@ try:
     with open(env_file) as env:
         for line in env:
             env_var.append([str(n) for n in line.strip().split('=')])
-    print(env_var)
     for pair in env_var:
         try:
             key, value = pair[0], pair[1]
