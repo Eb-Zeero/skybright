@@ -18,4 +18,5 @@ The framework will launch a Bokeh server on your deployment host. See the sectio
 * [Using forms](docs/forms.md)
 * [Authentication](docs/authentication.md)
 * [Testing](docs/testing.md)
+* [see this works](docs/seethis.md)
 # My project's README
