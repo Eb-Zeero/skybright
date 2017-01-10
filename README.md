@@ -8,15 +8,7 @@ The framework will launch a Bokeh server on your deployment host. See the sectio
 
 * [Installation](docs/installation.md)
 * [Environment variables](docs/environment-variables.md)
-* [Logging](docs/logging.md)
-* [Handling errors](docs/handling-errors.md)
-* [Running the server and tests](docs/running.md)
-* [Using Bokeh](docs/bokeh.md)
-* [Flask templates](docs/templates.md)
-* [Static files](docs/static-files.md)
-* [Storing content in a database](docs/database.md)
-* [Using forms](docs/forms.md)
-* [Authentication](docs/authentication.md)
+* [database updatee](docs/database_update.md)
 * [Testing](docs/testing.md)
-* [see this works](docs/seethis.md)
-# My project's README
+
+# SkyBright's README

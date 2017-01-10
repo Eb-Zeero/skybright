@@ -1,0 +1,7 @@
+.env
+/venv
+/app/static/.webassets-cache
+/app/static/cache
+__pycache__/
+*.py.swp
+/.idea

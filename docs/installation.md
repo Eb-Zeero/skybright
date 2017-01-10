@@ -2,8 +2,9 @@
 
 ## On your machine for development
 
-Download the content of the repository as a zip file and extract the file into a directory of your choice. Don't clone the repository, unless you are actually planning to update the start setup rather than to create a new Flask site.
+Download the content of the repository as a zip file and extract the file into a directory of your choice. Don't clone the repository.
 
+Git must be installed in the development machine
 You should then put the new directory (let's call it `/path/to/site`) under version control.
 
 ```bash
@@ -11,46 +12,32 @@ cd /path/to/site
 git init
 ```
 
-Make sure you've installed [Java](http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html) (required for building bundles of static files with Flask-Assets) and Python 3. Create a virtual environment
+Make sure you've installed [Java](http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html) and Python 3. Create a virtual environment
+By running command:
 
 ```bash
 python3 -m venv venv
 ```
 
-and then install the required Python libraries,
+virtual environment name must be venv else you will need to modify the code framework and change venv to
+name of you choice. (So just run the command as it is to simplify the work).
+
+Activate the virtual environment and install all the required Python Libraries by running command:
 
 ```bash
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Create a file `env_var_prefix` which contains a single line with the prefix to use for the environment variables (such as `FSS`). 
+**note:** venv and everything on it must not be put in version control since it will vary through machines and/or may cause confusion in the server
 
-Define the required environment variables, as set out in the section [Environment variables](environment-variables.md) below. (If you are using an IDE, you might define these in your running configuration.)
-
-If you are planning to use it, you also need to install [Flyway](https://flywaydb.org) on your machine. Otherwise you have to set the environment variable `<PREFIX>_DB_MIGRATION_TOOL` (with the prefix defined in `env_var_prefix`) to another tool, or `None`. See the Database section below.
-
-You can download its command-line tool from [https://flywaydb.org/getstarted/download](https://flywaydb.org/getstarted/download). As Java is on your machine already (at least if you've followed the instructions so far), you may download the version without JRE.
-
-Extract the downloaded file in a suitable location of your choice (`/path/to/Flyway`, say). Then you can define a command `flyway` by defining an alias in your Bash configuration.
-
-```bash
-alias flyway='/path/to/Flyway/flyway'
-```
-
-As this alias won't be used by Flask, you might also need to set an environment variable `<PREFIX>_DB_MIGRATION_COMMAND` (with the prefix defined in `env_var_prefix`) to the path to the Flyway script.
-
-```bash
-export <PREFIX>_DB_MIGRATION_FLYWAY_COMMAND='/path/to/Flyway/flyway'
-```
-
-Finally, you should modify the `README.md` file as required, and add a `LICENSE.txt` file.
 
 ## On a remote server
 
-**Important:** When the site is deployed, a file `.env` is created, which contains settings which must be kept secret. **Ensure that this file is not put under version control.**
-
+**Important note:** Do not install Apache. When the site is deployed, a file .env is created, which contains settings which must be kept secret. Ensure that it is not put under version control.
 Ubuntu 14.04 or higher must be running on the remote server, and standard commands like`ssh` must be installed. The server should not be used for anything other than running the deployed website.
+
+**Note:** Python default version must not be change, and again Do not install Apache if Apache is installed already uninstall it
 
 Create a user `deploy` for deploying the site, and give that user sudo permissions:
 
@@ -59,7 +46,7 @@ adduser deploy
 gpasswd -a deploy sudo
 ```
 
-You may choose another username for this user, but then you have to set the `<PREFIX>_SERVER_USERNAME` environment variable accordingly. See the [section on environment variables](environment-variables.md) for an explanation of the prefix.
+**Important note:** Deploying user name, must be **deploy**( or code framework must be modified)
 
 Make sure wget is installed on the server.
 
@@ -106,12 +93,6 @@ fab setup
 ```
 
 Supervisor, which is used for running the Nginx server, logs both the standard output and the standard error to log files in the folder `/var/log/supervisor`. You should check these log files if the server doesn't start.
-
-For subsequent updates you may just run
-
-```bash
-fab deploy
-```
 
 If you get an internal server error after updating, there might still be a uWSGI process bound to the requested port. Also, it seems that sometimes changes aren't picked up after deployment, even though Supervisor is restarted. 
 
