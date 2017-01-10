@@ -247,6 +247,7 @@ def find_moon_rise_set(date_):
 '''
     Ckeckbox List
 '''
+print("Nothing added")
 checkbox_list = [[0, 1], [0, 1, 2, 3, 4], [0]]
 range_checkbox_list = [[0, 1], [0], [0]]
 # ========================= Checkbox List End ====================================
