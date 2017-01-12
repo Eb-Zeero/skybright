@@ -5,3 +5,6 @@
 Files in subdirectories are *not* served; so putting helper files in a subdirectory is perfectly fine.
 
 Note that by default scripts in this directory cannot access other packages in this project which aren't included in this directory. If you need to import anything from these directories, you'll have to add them to the Python path using `sys.path.append`.
+
+
+![Picture](docs/bokeh_plot.png)
