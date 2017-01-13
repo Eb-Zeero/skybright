@@ -1,14 +1,17 @@
-# Flask Start Setup
+# Sky Bright Setup
+An easy to setup application. This setup instruction is intended for a
+linux ubuntu 14.0.4 and above. with python 3.5 installed. Other operating
+systems might require addition configurations which might not be
+explained in this documentation.
 
-A simple framework for getting started with a Flask site using a MySQL database, which is based on the books *Flask Web Development* by Miguel Grinberg (O'Reilly) and *Mastering Flask* by Jack Stouffer (Packt Publishing).
-
-The framework will launch a Bokeh server on your deployment host. See the section on Bokeh to find out what to do if you don't need this.
-
+The code in this repository is written in python 3.5, hence python 3.5
+ must be installed in the development machine before preceding with
+installation. [Follow installation guide](https://docs.python.org/3.5/installing/index.html)
 ## Table of contents
 
 * [Installation](docs/installation.md)
 * [Environment variables](docs/environment-variables.md)
-* [database updatee](docs/database_update.md)
+* [database update](docs/database_update.md)
 * [Testing](docs/testing.md)
 
 
