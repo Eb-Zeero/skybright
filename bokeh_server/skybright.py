@@ -14,7 +14,6 @@ from dateutil.relativedelta import relativedelta
 import pymysql
 import os
 import ephem
-import configparser
 import smtplib
 
 
@@ -53,46 +52,56 @@ def empty_range(to, po, fo):
     range_source[to][po][fo].data['telescope'] = []
     range_source[to][po][fo].data['count'] = []
 
-conf = configparser.ConfigParser()
-conf.read('$HOME/skybright/bokeh_server/none_plots/setter.ini')
-try:
-    """
-    configuring environment variable for deployment and developing
-    """
-    env_file = "/home/deploy/skybright/.env"
-    #
-    env_var = []
 
-    us, pa, ho, da = "", "", "", ""
-    with open(env_file) as env:
-        for line in env:
-            env_var.append([str(n) for n in line.strip().split('=')])
-    for pair in env_var:
+def set_config():
+    if __name__.startswith("bk_script"):
         try:
-            key, value = pair[0], pair[1]
-            if key == "SKY_DATABASE_USER":
-                us = value
-            if key == "SKY_DATABASE_PASSWORD":
-                pa = value
-            if key == "SKY_DATABASE_HOST":
-                ho = value
-            if key == "SKY_DATABASE_NAME":
-                da = value
-        except IndexError:
-            print("A line in the file doesn't have enough entries.")
+            """
+            configuring environment variable for deployment and developing
+            """
+            env_file = "/home/deploy/skybright/.env"
+            #
+            env_var = []
 
-    config = {
-        'user': us,
-        'passwd': pa,
-        'host': ho,
-        'db': da,
-    }
-except:
-    config = {
-        'user': os.environ['SKY_DATABASE_USER'],
-        'passwd': os.environ['SKY_DATABASE_PASSWORD'],
-        'host': os.environ['SKY_DATABASE_HOST'],
-        'db': os.environ['SKY_DATABASE_NAME']}
+            us, pa, ho, da = "", "", "", ""
+            with open(env_file) as env:
+                for line in env:
+                    env_var.append([str(n) for n in line.strip().split('=')])
+            for pair in env_var:
+                try:
+                    key, value = pair[0], pair[1]
+                    if key == "SKY_DATABASE_USER":
+                        us = value
+                    if key == "SKY_DATABASE_PASSWORD":
+                        pa = value
+                    if key == "SKY_DATABASE_HOST":
+                        ho = value
+                    if key == "SKY_DATABASE_NAME":
+                        da = value
+                except IndexError:
+                    print("A line in the file doesn't have enough entries.")
+
+            config = {
+                'user': us,
+                'passwd': pa,
+                'host': ho,
+                'db': da,
+            }
+        except:
+            config = {
+                'user': os.environ['SKY_DATABASE_USER'],
+                'passwd': os.environ['SKY_DATABASE_PASSWORD'],
+                'host': os.environ['SKY_DATABASE_HOST'],
+                'db': os.environ['SKY_DATABASE_NAME']
+            }
+    else:
+        config = {
+            'user': os.environ['LOCAL_DB_USER'],
+            'password': os.environ['LOCAL_DB_PASS'],
+            'host': os.environ['TEST_HOST'],
+            'database': os.environ['TEST_DB'],
+        }
+    return config
 
 
 def find_filter_number(char_):
@@ -240,7 +249,7 @@ def read_database(dte_, num):
     :param num: number of days 1 or 7 including 7 days before date with date included
     :return: data from the query
     """
-    global config
+    config = set_config()
     data_ = []
     date_n = dte_ + timedelta(days=1)
     if num != 1:
@@ -248,8 +257,8 @@ def read_database(dte_, num):
     sql = (
                     "SELECT DATE_TIME, SKYBRIGHTNESS, CLOUD_COVERAGE, MOON, TELESCOPE, FILTER_BAND, POSX, SB_ERROR "
                     "FROM SkyBrightness "
-                    "WHERE DATE_TIME > '%s-%s-%s 13:00:00' "
-                    "AND DATE_TIME < '%s-%s-%s 13:00:00' "
+                    "WHERE DATE_TIME > '%s-%s-%s 12:00:00' "
+                    "AND DATE_TIME < '%s-%s-%s 12:00:00' "
                     "AND SKYBRIGHTNESS != 0 "
                 ) % (str(dte_)[0:4], str(dte_)[5:7], str(dte_)[8:10],
                      str(date_n)[0:4], str(date_n)[5:7], str(date_n)[8:10])
@@ -276,12 +285,13 @@ def read_range_database(min_date, max_date):
     :param max_date: end date (before date noon ), a list of int year, month and day
     :return: data from the query
     """
+    config = set_config()
     range_dta = []
     select_sb = (
                     "SELECT DATE_TIME, SKYBRIGHTNESS, CLOUD_COVERAGE, MOON, TELESCOPE, FILTER_BAND, POSX, SB_ERROR  "
                     "FROM SkyBrightness "
-                    "WHERE DATE_TIME > '%s-%s-%s 13:00:00' "
-                    "AND DATE_TIME < '%s-%s-%s 13:00:00' "
+                    "WHERE DATE_TIME > '%s-%s-%s 12:00:00' "
+                    "AND DATE_TIME < '%s-%s-%s 12:00:00' "
                     "AND SKYBRIGHTNESS != 0 "
                 ) % (min_date[0], min_date[1], min_date[2], max_date[0], max_date[1], max_date[2])
 
@@ -331,202 +341,6 @@ def find_moon_rise_set(dte_):
     rise_set = [beg_twilight, end_twilight]
     return rise_set
 
-#    Checkbox List
-checkbox_list = [[0, 1], [0, 1, 2, 3, 4], [0]]
-range_checkbox_list = [[0, 1], [0], [0]]
-# ========================= Checkbox List End ====================================
-
-# Selectors=============================================================================================================
-dat = datetime.now() - timedelta(days=1)
-dat_ = dat - timedelta(days=30)
-y = ['2015', '2016']
-m = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-day31 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18',
-         '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
-day30 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',  '13', '14', '15', '16', '17', '18',
-         '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30']
-day29 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',  '13', '14', '15', '16', '17', '18',
-         '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29']
-day28 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18',
-         '19', '20', '21', '22', '23', '24', '25', '26', '27', '28']
-fail = False
-if str(dat)[:4] not in y:
-    y.append(str(dat)[:4])
-
-year_ = Select(title="Year:", value=str(dat)[:4], options=y)
-month_ = Select(title="Month:", value=str(dat)[5:7], options=m)
-day_ = Select(title="Day:", value=str(dat)[8:10])
-
-range_year_min = Select(title="Year:", value=str(dat_)[:4], options=y)
-range_month_min = Select(title="Month:", value=str(dat_)[5:7], options=m)
-range_day_min = Select(title="Day:", value=str(dat_)[8:10])
-range_year_max = Select(title="Year:", value=str(dat)[:4], options=y)
-range_month_max = Select(title="Month:", value=str(dat)[5:7], options=m)
-range_day_max = Select(title="Day:", value=str(dat)[8:10])
-
-# Buttons ==============================================================================================================
-submit_btn = Button(label="Submit")
-week_btn = Button(label="Week")
-range_submit_btn = Button(label="Submit")
-
-# Checkbox =============================================================================================================
-telescope_group = CheckboxGroup(labels=["Sunrise", "Sunset"], active=[0, 1])
-filter_group = CheckboxGroup(labels=["V", "B", "R", "I", "Exclude moon"], active=[0])
-
-range_telescope_group = CheckboxGroup(labels=['Sunrise', 'Sunset'], active=[0, 1])
-range_position_group = CheckboxGroup(labels=["Zenith", "South", "East", "North", "West"], active=[0])
-range_filter_group = CheckboxGroup(labels=["V", "B", "R", "I", "Exclude moon"], active=[0])
-
-# Sliders ==============================================================================================================
-cloud_coverage = Slider(name='slider', start=0, end=100, value=30, step=1, title="Cloud coverage",
-                        callback_policy='mouseup')
-range_cloud_coverage = Slider(name='range_slider', start=0, end=100, value=30, step=1, title="Cloud coverage",
-                              callback_policy='mouseup')
-
-# Dev ==================================================================================================================
-telescope_div = Div(text=""" <div class="head-text" ><span >Telescope </span></div>""",  width=60, height=30)
-filter_div = Div(text=""" <div class="head-text" ><span >Filter </span></div>""", width=60, height=30)
-
-range_telescope_div = Div(text="""<div class="head-text" ><span >Telescope </span></div>""", width=60, height=30)
-range_position_div = Div(text="""<div class="head-text" ><span >Position </span></div>""", width=60, height=30)
-range_filter_div = Div(text="""<div class="head-text" ><span >Filter </span></div>""", width=60, height=30)
-
-start_div = Div(text="""<div class="lead-text" ><span >Night Of: </span></div>""", width=140, height=40)
-
-range_start_div = Div(text="""<div class = "lead-text-rng"><span>Start Date: </span></div>""", width=150, height=40)
-range_end_div = Div(text=""" <div class = "lead-text-rng"><span>End Date: </span></div>""", width=150, height=50)
-
-# DATA SOURCE ==========================================================================================================
-data_source = [[[], [], [], [], []], [[], [], [], [], []]]
-span_source = [[[], [], [], [], []], [[], [], [], [], []]]
-for t in range(2):
-    for p in range(5):
-        for f in range(4):
-            data_source[t][p].append(ColumnDataSource(data=dict(x=[], y=[], alpha=[], h_date=[], error=[],
-                                                                telescope=[], filter=[])))
-            span_source[t][p].append(ColumnDataSource(data=dict(x=[], h_date=[], y=[], coverage=[], telescope=[],
-                                                                filter=[])))
-
-range_source = [[[], [], [], [], []], [[], [], [], [], []]]
-range_span_source = [[[], [], [], [], []], [[], [], [], [], []]]
-
-for t in range(2):
-    for p in range(5):
-        for fr in range(4):
-            range_source[t][p].append(ColumnDataSource(data=dict(x=[], y=[], h_date=[], telescope=[], filter=[],
-                                                                 error=[], position=[], count=[])))
-            range_span_source[t][p].append(ColumnDataSource(data=dict(x=[], h_date=[], y=[], telescope=[],
-                                                                      filter=[], error=[], position=[], count=[])))
-
-source = ColumnDataSource(data=dict(value=[30]))
-d_source = ColumnDataSource(data=dict(value=[30]))
-
-# Hovers ===============================================================================================================
-tool_list = "pan,reset,save,wheel_zoom, box_zoom"
-range_hover = HoverTool(
-    tooltips="""
-        <div>
-            <div>
-                <span style="font-size: 15px; font-weight: bold;">@h_date</span>
-            </div>
-            <div>
-                <span style="font-size: 17px;">No. of Points: @count</span>
-            </div>
-            <div>
-                <span style="font-size: 15px; font-weight: bold;">SB: </span>
-                <span style="font-size: 15px; color: #669;">@y </span>
-                <span style="font-size: 15px; color: #966;">+/-@error </span>
-            </div>
-            <div>
-                <span style="font-size: 15px; color: #969;">@telescope</span>
-                <span style="font-size: 15px; color: #696;">@filter</span>
-            </div>
-            <div>
-                <span style="font-size: 15px; font-weight: bold;">Position: </span>
-                <span style="font-size: 15px; color: #669;">@position</span>
-            </div>
-
-        </div>
-        """
-)
-range_hover.line_policy = "interp"
-range_hover.point_policy = "follow_mouse"
-plot = []
-hover = [0, 1, 2, 3, 4]
-annotations = [[], [], [], [], [], [], []]
-
-for i in range(5):
-    hover[i] = HoverTool(
-        tooltips="""
-            <div>
-                <div>
-                    <span style="font-size: 17px; font-weight: bold;">@h_date</span>
-                </div>
-                <div>
-                    <span style="font-size: 17px;">SB: </span>
-                    <span style="font-size: 17px; color: #669; font-weight: bold;">@y </span>
-                    <span style="font-size: 17px; color: #966;">+/-@error </span>
-                </div>
-                <div>
-                    <span style="font-size: 18px; font-weight: bold;">@telescope</span>
-                    <span style="font-size: 17px; color: #669; font-weight: bold;"> @filter </span>
-                </div>
-            </div>
-            """
-    )
-    hover[i].point_policy = "follow_mouse"
-    hover[i].line_policy = "interp"
-    tit_ = find_tittle(i)
-    if i == 0:
-        plt = figure(title=tit_,
-                     toolbar_location='above',
-                     tools=[tool_list],
-                     x_axis_type="datetime",
-                     background_fill_alpha=0.09,
-                     plot_width=1140, plot_height=350
-                     )
-    else:
-        plt = figure(title=tit_,
-                     toolbar_location='above',
-                     tools=[tool_list],
-                     x_axis_type="datetime",
-                     background_fill_alpha=0.09,
-                     plot_width=570, plot_height=250)
-
-    plot.append(plt)
-    plot[i].xaxis.major_label_orientation = pi / 4
-    plot[i].ygrid.grid_line_color = None
-    plot[i].add_tools(hover[i])
-    plot[i].title.text_font_size = "25px"
-    plot[i].title.align = "center"
-    plot[i].title.text_color = "navy"
-    plot[i].border_fill_color = "#f4f4f4"
-    plot[i].min_border = 30
-    plot[i].x_range = plot[0].x_range
-    plot[i].y_range = plot[0].y_range
-
-range_plot = figure(plot_height=500, plot_width=1100,
-                    title="Range",
-                    tools=[tool_list, range_hover],
-                    x_axis_type="datetime",
-                    background_fill_alpha=0.09)
-range_plot.xgrid.grid_line_color = None
-range_plot.title.text_font_size = "25px"
-range_plot.title.align = "center"
-range_plot.title.text_color = "navy"
-range_plot.border_fill_color = "#f4f4f4"
-range_plot.min_border = 30
-range_plot.toolbar_location = 'above'
-range_plot.xaxis.major_label_orientation = pi / 4
-
-# Annotations ==========================================================================================================
-for i1 in range(5):
-    for da in range(10):
-        annotations[i1].append(BoxAnnotation(fill_color='green'))
-        plot[i1].renderers.extend([annotations[i1][da]])
-
-# Massage Plot =========================================================================================================
-
 
 def msg_plot():
     """
@@ -554,14 +368,6 @@ def msg_plot():
     message_plot.circle(x=[1, 5], y=[1, 5], line_width=3, alpha=0)
     message_plot.border_fill_color = "#fafafa"
     message_plot.background_fill_color = "#fafafa"
-
-msg_plot()
-
-# Initial load of DATA =================================================================================================
-date_ = selector_to_date(year_.value, month_.value, day_.value)
-data = read_database(date_, 1)
-range_data = read_range_database([range_year_min.value, range_month_min.value, range_day_min.value],
-                                 [range_year_max.value, range_month_max.value, range_day_max.value])
 
 
 def set_data_source(dte_, sb_, cc_, err_, tl_, fil_, te, po, fe):
@@ -776,8 +582,7 @@ def update_data_source():
     Update the data source, setting data for the selected checkbox
     :return: None
     """
-    global data_source, date_list, h_list, data_list, error_list, telescope_list, filter_list, checkbox_list,\
-        coverage_list
+    global data_source, checkbox_list
     for te in range(2):
         for po in range(5):
             for fe in range(4):
@@ -789,9 +594,9 @@ def update_data_source():
                         if 4 in checkbox_list[2]:
 
                             for dt, sb, co, er, tel, fi, mo in zip(date_list[te][po][fe], data_list[te][po][fe],
-                                                                      coverage_list[te][po][fe],
-                                                                      error_list[te][po][fe], telescope_list[te][po][fe],
-                                                                      filter_list[te][po][fe], moon_list[te][po][fe]):
+                                                                   coverage_list[te][po][fe], error_list[te][po][fe],
+                                                                   telescope_list[te][po][fe], filter_list[te][po][fe],
+                                                                   moon_list[te][po][fe]):
                                 if mo == 0:
                                     dt_.append(dt)
                                     da_.append(sb)
@@ -1015,8 +820,10 @@ def create_and_set_annotations(min_day):
     for day in moon_up_date:
         for i in range(5):
             r_and_s = find_moon_rise_set(str(day + relativedelta(hours=2)))
-            annotations[i][d].set(left=((r_and_s[0]).datetime() + relativedelta(hours=2)).timestamp() * 1000,
-                                  right=((r_and_s[1]).datetime() + relativedelta(hours=2)).timestamp() * 1000)
+            annotations[i][d].set(left=((r_and_s[0]).datetime() +
+                                        relativedelta(hours=2, minutes=5)).timestamp() * 1000,
+                                  right=((r_and_s[1]).datetime() +
+                                         relativedelta(hours=1, minutes=55)).timestamp() * 1000)
             annotations[i][d].fill_alpha = 0.1
         d += 1
 
@@ -1145,146 +952,352 @@ def update_range_checkbox_list(list_, ind_):
 
 # initiate definitions =================================================================================================
 
+#    Checkbox List
+checkbox_list = [[0, 1], [0, 1, 2, 3, 4], [0]]
+range_checkbox_list = [[0, 1], [0], [0]]
+# ========================= Checkbox List End ====================================
 
-def initiate():
-    """
-    Initial load of the website
-    :return: None
-    """
-    is_data = False
-    create_list()
-    create_range_list()
+# Selectors=============================================================================================================
+dat = datetime.now() - timedelta(days=1)
+dat_ = dat - timedelta(days=30)
+y = ['2015', '2016']
+m = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+day31 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18',
+         '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
+day30 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',  '13', '14', '15', '16', '17', '18',
+         '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30']
+day29 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',  '13', '14', '15', '16', '17', '18',
+         '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29']
+day28 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18',
+         '19', '20', '21', '22', '23', '24', '25', '26', '27', '28']
+fail = False
+if str(dat)[:4] not in y:
+    y.append(str(dat)[:4])
 
-    update_data_source()
+year_ = Select(title="Year:", value=str(dat)[:4], options=y)
+month_ = Select(title="Month:", value=str(dat)[5:7], options=m)
+day_ = Select(title="Day:", value=str(dat)[8:10])
 
-    slider_moved(cloud_coverage, 0, 30)
-    range_slider_moved(range_cloud_coverage, 0, 30)
-    for te in range(2):
-        for po in range(5):
-            for fe in range(4):
-                if len(data_list[te][po][fe]) > 0:
-                    is_data = True
-    if is_data:
+range_year_min = Select(title="Year:", value=str(dat_)[:4], options=y)
+range_month_min = Select(title="Month:", value=str(dat_)[5:7], options=m)
+range_day_min = Select(title="Day:", value=str(dat_)[8:10])
+range_year_max = Select(title="Year:", value=str(dat)[:4], options=y)
+range_month_max = Select(title="Month:", value=str(dat)[5:7], options=m)
+range_day_max = Select(title="Day:", value=str(dat)[8:10])
+
+# Buttons ==============================================================================================================
+submit_btn = Button(label="Submit")
+week_btn = Button(label="Week")
+range_submit_btn = Button(label="Submit")
+
+# Checkbox =============================================================================================================
+telescope_group = CheckboxGroup(labels=["Sunrise", "Sunset"], active=[0, 1])
+filter_group = CheckboxGroup(labels=["V", "B", "R", "I", "Exclude moon"], active=[0])
+
+range_telescope_group = CheckboxGroup(labels=['Sunrise', 'Sunset'], active=[0, 1])
+range_position_group = CheckboxGroup(labels=["Zenith", "South", "East", "North", "West"], active=[0])
+range_filter_group = CheckboxGroup(labels=["V", "B", "R", "I", "Exclude moon"], active=[0])
+
+# Sliders ==============================================================================================================
+cloud_coverage = Slider(name='slider', start=0, end=100, value=30, step=1, title="Cloud coverage",
+                        callback_policy='mouseup')
+range_cloud_coverage = Slider(name='range_slider', start=0, end=100, value=30, step=1, title="Cloud coverage",
+                              callback_policy='mouseup')
+
+# Dev ==================================================================================================================
+telescope_div = Div(text=""" <div class="head-text" ><span >Telescope </span></div>""",  width=60, height=30)
+filter_div = Div(text=""" <div class="head-text" ><span >Filter </span></div>""", width=60, height=30)
+
+range_telescope_div = Div(text="""<div class="head-text" ><span >Telescope </span></div>""", width=60, height=30)
+range_position_div = Div(text="""<div class="head-text" ><span >Position </span></div>""", width=60, height=30)
+range_filter_div = Div(text="""<div class="head-text" ><span >Filter </span></div>""", width=60, height=30)
+
+start_div = Div(text="""<div class="lead-text" ><span >Night Of: </span></div>""", width=140, height=40)
+
+range_start_div = Div(text="""<div class = "lead-text-rng"><span>Start Date: </span></div>""", width=150, height=40)
+range_end_div = Div(text=""" <div class = "lead-text-rng"><span>End Date: </span></div>""", width=150, height=50)
+
+# DATA SOURCE ==========================================================================================================
+data_source = [[[], [], [], [], []], [[], [], [], [], []]]
+span_source = [[[], [], [], [], []], [[], [], [], [], []]]
+for t in range(2):
+    for p in range(5):
+        for f in range(4):
+            data_source[t][p].append(ColumnDataSource(data=dict(x=[], y=[], alpha=[], h_date=[], error=[],
+                                                                telescope=[], filter=[])))
+            span_source[t][p].append(ColumnDataSource(data=dict(x=[], h_date=[], y=[], coverage=[], telescope=[],
+                                                                filter=[])))
+
+range_source = [[[], [], [], [], []], [[], [], [], [], []]]
+range_span_source = [[[], [], [], [], []], [[], [], [], [], []]]
+
+for t in range(2):
+    for p in range(5):
+        for fr in range(4):
+            range_source[t][p].append(ColumnDataSource(data=dict(x=[], y=[], h_date=[], telescope=[], filter=[],
+                                                                 error=[], position=[], count=[])))
+            range_span_source[t][p].append(ColumnDataSource(data=dict(x=[], h_date=[], y=[], telescope=[],
+                                                                      filter=[], error=[], position=[], count=[])))
+
+source = ColumnDataSource(data=dict(value=[30]))
+d_source = ColumnDataSource(data=dict(value=[30]))
+
+# Hovers ===============================================================================================================
+tool_list = "pan,reset,save,wheel_zoom, box_zoom"
+range_hover = HoverTool(
+    tooltips="""
+        <div>
+            <div>
+                <span style="font-size: 15px; font-weight: bold;">@h_date</span>
+            </div>
+            <div>
+                <span style="font-size: 17px;">No. of Points: @count</span>
+            </div>
+            <div>
+                <span style="font-size: 15px; font-weight: bold;">SB: </span>
+                <span style="font-size: 15px; color: #669;">@y </span>
+                <span style="font-size: 15px; color: #966;">+/-@error </span>
+            </div>
+            <div>
+                <span style="font-size: 15px; color: #969;">@telescope</span>
+                <span style="font-size: 15px; color: #696;">@filter</span>
+            </div>
+            <div>
+                <span style="font-size: 15px; font-weight: bold;">Position: </span>
+                <span style="font-size: 15px; color: #669;">@position</span>
+            </div>
+
+        </div>
+        """
+)
+range_hover.line_policy = "interp"
+range_hover.point_policy = "follow_mouse"
+plot = []
+hover = [0, 1, 2, 3, 4]
+annotations = [[], [], [], [], [], [], []]
+
+for i in range(5):
+    hover[i] = HoverTool(
+        tooltips="""
+            <div>
+                <div>
+                    <span style="font-size: 17px; font-weight: bold;">@h_date</span>
+                </div>
+                <div>
+                    <span style="font-size: 17px;">SB: </span>
+                    <span style="font-size: 17px; color: #669; font-weight: bold;">@y </span>
+                    <span style="font-size: 17px; color: #966;">+/-@error </span>
+                </div>
+                <div>
+                    <span style="font-size: 18px; font-weight: bold;">@telescope</span>
+                    <span style="font-size: 17px; color: #669; font-weight: bold;"> @filter </span>
+                </div>
+            </div>
+            """
+    )
+    hover[i].point_policy = "follow_mouse"
+    hover[i].line_policy = "interp"
+    tit_ = find_tittle(i)
+    if i == 0:
+        plt = figure(title=tit_,
+                     toolbar_location='above',
+                     tools=[tool_list],
+                     x_axis_type="datetime",
+                     background_fill_alpha=0.09,
+                     plot_width=1140, plot_height=350
+                     )
+    else:
+        plt = figure(title=tit_,
+                     toolbar_location='above',
+                     tools=[tool_list],
+                     x_axis_type="datetime",
+                     background_fill_alpha=0.09,
+                     plot_width=570, plot_height=250)
+
+    plot.append(plt)
+    plot[i].xaxis.major_label_orientation = pi / 4
+    plot[i].ygrid.grid_line_color = None
+    plot[i].add_tools(hover[i])
+    plot[i].title.text_font_size = "25px"
+    plot[i].title.align = "center"
+    plot[i].title.text_color = "navy"
+    plot[i].border_fill_color = "#f4f4f4"
+    plot[i].min_border = 30
+    plot[i].x_range = plot[0].x_range
+    plot[i].y_range = plot[0].y_range
+
+range_plot = figure(plot_height=500, plot_width=1100,
+                    title="Range",
+                    tools=[tool_list, range_hover],
+                    x_axis_type="datetime",
+                    background_fill_alpha=0.09)
+range_plot.xgrid.grid_line_color = None
+range_plot.title.text_font_size = "25px"
+range_plot.title.align = "center"
+range_plot.title.text_color = "navy"
+range_plot.border_fill_color = "#f4f4f4"
+range_plot.min_border = 30
+range_plot.toolbar_location = 'above'
+range_plot.xaxis.major_label_orientation = pi / 4
+
+# Annotations ==========================================================================================================
+for i1 in range(5):
+    for da in range(10):
+        annotations[i1].append(BoxAnnotation(fill_color='green'))
+        plot[i1].renderers.extend([annotations[i1][da]])
+
+# Massage Plot =========================================================================================================
+
+# Initial load of DATA =================================================================================================
+date_ = selector_to_date(year_.value, month_.value, day_.value)
+data = read_database(date_, 1)
+range_data = read_range_database([range_year_min.value, range_month_min.value, range_day_min.value],
+                                 [range_year_max.value, range_month_max.value, range_day_max.value])
+
+
+def main():
+    def initiate():
+        """
+        Initial load of the website
+        :return: None
+        """
+        is_data = False
+        create_list()
+        create_range_list()
+
+        update_data_source()
+
+        slider_moved(cloud_coverage, 0, 30)
+        range_slider_moved(range_cloud_coverage, 0, 30)
+        for te in range(2):
+            for po in range(5):
+                for fe in range(4):
+                    if len(data_list[te][po][fe]) > 0:
+                        is_data = True
+        if is_data:
+            time.sleep(2)
+            d_label.set(text=' ')
+        else:
+            d_label.set(text='Date has no data to display')
+        month_changed(month_, 0, 0)
+        range_month_min_changed(month_, 0, 0)
+        range_month_max_changed(month_, 0, 0)
         time.sleep(2)
         d_label.set(text=' ')
-    else:
-        d_label.set(text='Date has no data to display')
-    month_changed(month_, 0, 0)
-    range_month_min_changed(month_, 0, 0)
-    range_month_max_changed(month_, 0, 0)
-    time.sleep(2)
-    d_label.set(text=' ')
-    r_label.set(text=' ')
-    if fail:
-        d_label.set(text=' Error on creating moon annotation', text_font_size='22px')
-initiate()
+        r_label.set(text=' ')
+        if fail:
+            d_label.set(text=' Error on creating moon annotation', text_font_size='22px')
 
-# Plots ================================================================================================================
-for t in range(2):
-    for p in range(5):
-        for f in range(4):
-            col_ = set_colour(t, f)
-            if t == 0:
-                plot[p].circle(source=data_source[t][p][f], x='x', y='y', line_width=2, color=col_, alpha='alpha')
-            if t == 1:
-                plot[p].diamond(source=data_source[t][p][f], x='x', y='y', line_width=2, color=col_, alpha='alpha')
-            plot[p].line(source=span_source[t][p][f], x='x', y='y', line_width=1, color=col_)
+    msg_plot()
+    initiate()
+    # Plots ============================================================================================================
+    for t in range(2):
+        for p in range(5):
+            for f in range(4):
+                col_ = set_colour(t, f)
+                if t == 0:
+                    plot[p].circle(source=data_source[t][p][f], x='x', y='y', line_width=2, color=col_, alpha='alpha')
+                if t == 1:
+                    plot[p].diamond(source=data_source[t][p][f], x='x', y='y', line_width=2, color=col_, alpha='alpha')
+                plot[p].line(source=span_source[t][p][f], x='x', y='y', line_width=1, color=col_)
 
+    for t in range(2):
+        tel_ = 'Sunrise' if t == 0 else 'Sunset'
+        for p in range(5):
+            for f in range(4):
+                filt_ = 'V' if f == 0 else 'B' if f == 1 else 'R' if f == 2 else 'I'
+                pos_ = find_position(p)
+                col_ = set_colour_range(t, p, f)
+                if f == 0:
+                    fig0 = range_plot.circle(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_,
+                                             fill_color=None)
+                if f == 1:
+                    fig1 = range_plot.triangle(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_)
+                if f == 2:
+                    fig2 = range_plot.diamond(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_)
+                if f == 3:
+                    fig3 = range_plot.square(source=range_source[t][p][f], x='x', y='y', line_width=5,  color=col_,
+                                             fill_color=None)
+                range_plot.line(source=range_span_source[t][p][f], x='x', y='y', line_width=1, color=col_)
 
-for t in range(2):
-    tel_ = 'Sunrise' if t == 0 else 'Sunset'
-    for p in range(5):
-        for f in range(4):
-            filt_ = 'V' if f == 0 else 'B' if f == 1 else 'R' if f == 2 else 'I'
-            pos_ = find_position(p)
-            col_ = set_colour_range(t, p, f)
-            if f == 0:
-                fig0 = range_plot.circle(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_,
-                                         fill_color=None)
-            if f == 1:
-                fig1 = range_plot.triangle(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_)
-            if f == 2:
-                fig2 = range_plot.diamond(source=range_source[t][p][f], x='x', y='y', line_width=5, color=col_)
-            if f == 3:
-                fig3 = range_plot.square(source=range_source[t][p][f], x='x', y='y', line_width=5,  color=col_,
-                                         fill_color=None)
-            range_plot.line(source=range_span_source[t][p][f], x='x', y='y', line_width=1, color=col_)
+                range_plot.legend.location = 'bottom_right'
+                range_plot.legend.background_fill_alpha = 0.4
 
-            range_plot.legend.location = 'bottom_right'
-            range_plot.legend.background_fill_alpha = 0.4
+    #    Interactions definitions ======================================================================================
 
-#    Interactions definitions ==========================================================================================
+    source.on_change('data', range_slider_moved)
+    range_cloud_coverage.callback = CustomJS(args=dict(source=source), code="""
+            source.data = { value: [cb_obj.value] }
+        """)
 
-source.on_change('data', range_slider_moved)
-range_cloud_coverage.callback = CustomJS(args=dict(source=source), code="""
-        source.data = { value: [cb_obj.value] }
-    """)
+    d_source.on_change('data', slider_moved)
+    cloud_coverage.callback = CustomJS(args=dict(source=d_source), code="""
+            source.data = { value: [cb_obj.value] }
+        """)
 
-d_source.on_change('data', slider_moved)
-cloud_coverage.callback = CustomJS(args=dict(source=d_source), code="""
-        source.data = { value: [cb_obj.value] }
-    """)
+    submit_btn.on_click(button_clicked)
+    week_btn.on_click(week_button_clicked)
+    range_submit_btn.on_click(range_button_clicked)
 
-submit_btn.on_click(button_clicked)
-week_btn.on_click(week_button_clicked)
-range_submit_btn.on_click(range_button_clicked)
+    filter_group.on_click(lambda selected_indices: update_checkbox_list(selected_indices, 2))
+    telescope_group.on_click(lambda selected_tele: update_checkbox_list(selected_tele, 0))
 
-filter_group.on_click(lambda selected_indices: update_checkbox_list(selected_indices, 2))
-telescope_group.on_click(lambda selected_tele: update_checkbox_list(selected_tele, 0))
+    range_filter_group.on_click(lambda selected_indices: update_range_checkbox_list(selected_indices, 2))
+    range_position_group.on_click(lambda selected_indices: update_range_checkbox_list(selected_indices, 1))
+    range_telescope_group.on_click(lambda selected_tele: update_range_checkbox_list(selected_tele, 0))
 
-range_filter_group.on_click(lambda selected_indices: update_range_checkbox_list(selected_indices, 2))
-range_position_group.on_click(lambda selected_indices: update_range_checkbox_list(selected_indices, 1))
-range_telescope_group.on_click(lambda selected_tele: update_range_checkbox_list(selected_tele, 0))
+    month_.on_change('value', month_changed)
+    range_month_min.on_change('value', range_month_min_changed)
+    range_month_max.on_change('value', range_month_max_changed)
+    year_.on_change('value', month_changed)
+    range_year_min.on_change('value', range_month_min_changed)
+    range_year_max.on_change('value', range_month_max_changed)
 
-month_.on_change('value', month_changed)
-range_month_min.on_change('value', range_month_min_changed)
-range_month_max.on_change('value', range_month_max_changed)
-year_.on_change('value', month_changed)
-range_year_min.on_change('value', range_month_min_changed)
-range_year_max.on_change('value', range_month_max_changed)
+    # Widget Box =======================================================================================================
+    inputs = widgetbox(cloud_coverage, filter_div, filter_group, telescope_div, telescope_group,
+                       width=310, height=180,
+                       sizing_mode='scale_both')
+    range_inputs = widgetbox(range_cloud_coverage, range_telescope_div, range_telescope_group, range_position_div,
+                             range_position_group,
+                             range_filter_div, range_filter_group)
+    wid_year = widgetbox(year_, week_btn, width=110, height=60)
+    wid_month = widgetbox(month_, width=100, height=60)
+    wid_day = widgetbox(day_, submit_btn, width=100, height=60)
 
-# Widget Box ===========================================================================================================
-inputs = widgetbox(cloud_coverage, filter_div, filter_group, telescope_div, telescope_group,
-                   width=310, height=180,
-                   sizing_mode='scale_both')
-range_inputs = widgetbox(range_cloud_coverage, range_telescope_div, range_telescope_group, range_position_div,
-                         range_position_group,
-                         range_filter_div, range_filter_group)
-wid_year = widgetbox(year_, week_btn, width=110, height=60)
-wid_month = widgetbox(month_, width=100, height=60)
-wid_day = widgetbox(day_, submit_btn, width=100, height=60)
+    dev_col = column(start_div)
+    r_dev_col = column(range_start_div, range_end_div)
 
-dev_col = column(start_div)
-r_dev_col = column(range_start_div, range_end_div)
+    wid_year_r = widgetbox(range_year_min, range_year_max, width=110, height=50)
+    wid_month_r = widgetbox(range_month_min, range_month_max, width=100, height=50)
+    wid_day_r = widgetbox(range_day_min, range_day_max, range_submit_btn, width=100, height=50)
 
-wid_year_r = widgetbox(range_year_min, range_year_max, width=110, height=50)
-wid_month_r = widgetbox(range_month_min, range_month_max, width=100, height=50)
-wid_day_r = widgetbox(range_day_min, range_day_max, range_submit_btn, width=100, height=50)
+    # View =============================================================================================================
 
-# View =================================================================================================================
+    date_tab = layout([[dev_col, wid_year, wid_month, wid_day, message_plot],
+                       [gridplot([plot[0]],
+                                 [plot[1], plot[2]],
+                                 [plot[3], plot[4]],
+                                 spacing=150),
+                        inputs]])
 
-date_tab = layout([[dev_col, wid_year, wid_month, wid_day, message_plot],
-                   [gridplot([plot[0]],
-                             [plot[1], plot[2]],
-                             [plot[3], plot[4]],
-                             spacing=150),
-                    inputs]])
+    legend = Legend(legends=[
+                    ('Filter V', [fig0]),
+                    ('Filter B', [fig1]),
+                    ('Filter R', [fig2]),
+                    ('Filter I', [fig3])
+                    ], location=(0, -30))
+    range_plot.add_layout(legend, 'left')
 
-legend = Legend(legends=[
-                ('Filter V', [fig0]),
-                ('Filter B', [fig1]),
-                ('Filter R', [fig2]),
-                ('Filter I', [fig3])
-                ], location=(0, -30))
-range_plot.add_layout(legend, 'left')
+    range_tab = layout([[r_dev_col, wid_year_r, wid_month_r, wid_day_r, r_message_plot], [range_plot, range_inputs]])
 
+    tab1 = Panel(child=date_tab, title="Date", sizing_mode="scale_both")
+    tab2 = Panel(child=range_tab, title="Date range", sizing_mode="scale_both")
+    tabs = Tabs(tabs=[tab1, tab2])
 
-range_tab = layout([[r_dev_col, wid_year_r, wid_month_r, wid_day_r, r_message_plot], [range_plot, range_inputs]])
+    # Serve ============================================================================================================
+    curdoc().add_root(tabs)
+    curdoc().title = "SkyBrightness"
 
-tab1 = Panel(child=date_tab, title="Date", sizing_mode="scale_both")
-tab2 = Panel(child=range_tab, title="Date range", sizing_mode="scale_both")
-tabs = Tabs(tabs=[tab1, tab2])
-
-# Serve ================================================================================================================
-curdoc().add_root(tabs)
-curdoc().title = "SkyBrightness"
+print("This is the name!!", __name__)
+if __name__.startswith("bk_script"):
+    main()

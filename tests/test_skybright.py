@@ -21,6 +21,8 @@ class TestSkybright(unittest.TestCase):
         self.assertEqual(result, 3)
         result = sb.find_filter_number("F")
         self.assertEqual(result, -1)
+        resul = sb.find_filter_name(3)
+        self.assertEqual(result, -1)
 
     def test_find_filter_name(self):
         """
@@ -36,7 +38,7 @@ class TestSkybright(unittest.TestCase):
         self.assertEqual(result, "I")
         result = sb.find_filter_name(4)
         self.assertEqual(result, None)
-        result = sb.find_filter_name(65)
+        result = sb.find_filter_name("B")
         self.assertEqual(result, None)
         result = sb.find_filter_name(-1)
         self.assertEqual(result, None)
@@ -57,7 +59,7 @@ class TestSkybright(unittest.TestCase):
         self.assertEqual(result, "West")
         result = sb.find_position(-1)
         self.assertEqual(result, None)
-        result = sb.find_position(45)
+        result = sb.find_position("word")
         self.assertEqual(result, None)
 
     def test_find_tittle(self):
@@ -90,6 +92,8 @@ class TestSkybright(unittest.TestCase):
         result = sb.find_telescope_name(2)
         self.assertEqual(result, None)
         result = sb.find_telescope_name("0")
+        self.assertEqual(result, None)
+        result = sb.find_telescope_name("word")
         self.assertEqual(result, None)
 
     def test_find_range_date(self):
@@ -129,13 +133,6 @@ class TestSkybright(unittest.TestCase):
         self.assertEqual(result, datetime(2016, 12, 13))
         result = sb.selector_to_date('2016', '12', '13')
         self.assertEqual(result, datetime(2016, 12, 13))
-
-    def test_this(self):
-        """
-            Testing
-        """
-        result = 1
-        self.assertEqual(result, 1)
 
 if __name__ == '__main__':
     unittest.main()
