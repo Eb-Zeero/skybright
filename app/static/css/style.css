@@ -43,3 +43,33 @@ button.bk-bs-btn.bk-bs-btn-default{
         margin-right: auto;
         margin-left: 3px;
 }
+
+img {
+	max-width: 900px;
+    width:100%;
+}
+
+dummydeclaration { padding-left: 4em; } /* Firefox ignores first declaration for some reason */
+tab0 { padding-left: 1.5em; }
+tab2{ padding-left: 6em; }
+tab1 {
+	padding-left: 2em;
+	margin-left:0em;
+ }
+mark1{
+	background-color: #dee0de;
+    color: black;
+}
+
+.img-list{
+	max-height:35px;
+	max-width:35px;
+	float:left;
+	border: 1px dotted black;
+    margin: 0px 20px 15px 0px;
+}
+.list-li{
+	margin:0;
+	padding: 0px 0px 0px 4em;
+	list-style: none;
+}

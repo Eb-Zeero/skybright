@@ -1,4 +1,3 @@
-dateutil
 alembic==0.8.8
 behave==1.2.5
 bokeh==0.12.2

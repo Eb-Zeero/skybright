@@ -1,0 +1,347 @@
+<html >
+<head>
+<br>
+<br>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<!-- Popup-->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+<!-- Popup-->
+
+<title> How to use Skybright</title>
+
+</head>
+
+<br><br>
+<link rel="stylesheet" type="text/css" href="css/style.css">
+
+<body background="img/bc3.jpg" style="background-color:#dddddd; font-size: 20px;">
+<div class="container" style="background-color:#fefffe;">
+    <center>
+		<br><br><h1>How to use SkyBright</h1>
+	</center>
+	<ol>
+		<br><br><h1 style="text-align:center; list-style-position:inside;"><li>Intoduction</h1><br>
+			<div>
+				Skybright is data simplifiying software that will display sky brightness of Sutherland. With Skybright you can view the sky brightness of a filter choice, compare it with other filters
+				of any day the observation was made. Hover mouse over a point to see date and time,  magnitude and error, and  telescope and filter it belong to. By hovering over a median line you will
+				see median of available points of a selected filter, and its minimum value and maximum value
+
+			</div>
+			<br>
+		</li>
+
+		<br><br><h1 style="text-align:center; list-style-position:inside;"><li>Start page</h1><br>
+			<div>When SkyBright web is opened. a page just like in Figure 1 below will display.</div>
+			<br>
+
+			<figure>
+				<a href="#myPopup" data-rel="popup" data-position-to="window">
+					<img src="img/start-page.png" alt="Skaret View" style="width:200px%; height:450px; max-width=300px">
+				</a>
+				<center><figcaption><h3>Figuer 1: start page</h3></figcaption></center>
+
+				<div id="pageone" data-role="main" class="ui-content">
+					<div data-role="popup" id="myPopup">
+						<p>Start Page</p>
+						<a href="#pageone" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+						<img src="img/start-page.png" style="width:1200px;height:650px;" alt="Skaret View">
+					</div>
+				</div>
+			</figure>
+
+
+			<br>
+			<div>
+				<ol>
+					<h3><li><a name="chart-tabs">Chart tabs</a></h3>
+						<ul style="list-style-type:disc">
+						<li>This controls what tab to be viewed either Date tab or Date range tab<br>
+							<b>Date tab:</b><br><tab0> This tab displays data of a single date by default. And on load it
+								will load data of the observation of a night before. Also display data of seven days back
+								from the selected date by just clicking a week button. and you can zoom in days to see fewer days of that week.</tab0><br><br>
+
+							<b>Date range:</b><br><tab0> This will display by default data of 30 day from the night before.
+								Only selecting a median data point of each observed date.</tab0>
+						</li>
+						</ul>
+					</li>
+
+					<h3><li><a name="date-selector">Date selector</a></h3>
+						<ul style="list-style-type:disc">
+							<li><b>Year</b> <br>
+								<tab0>This select a year you wish to view data of</tab0>
+							</li>
+
+							<li><b>Month</b><br>
+								<tab0>This select a month of a year you wish to view data of</tab0>
+							</li>
+
+							<li><b>Date</b><br>
+								<tab0>This select a day of a month you wish to view data of</tab0>
+							</li>
+						</ul>
+					</li>
+
+					<h3><li><a name="status-chart">Status chart</a></h3>
+						<ul style="list-style-type:disc">
+							<li>When data is loading status chart will show progress massage if data is successfully
+							loaded it notify the user and remove the massage, else it will display massage of why
+							chart are empty</li>
+						</ul>
+					</li>
+
+					<h3><li><a name="bokeh-charts">Bokeh charts</a></h3>
+						<ul>
+							<li>This is where the charts are displayed for the components selected. Charts are divided into five, which are five positions recorded in the server.
+							Each positin name is used as a tittle of a chart. Charts support mouse hover to get details of data you are looking at, and zooming
+							to get a smaller or large scale of data.</li>
+						</ul>
+					</li>
+
+					<h3><li><a name="bokeh-control">Bokeh control tools</a></h3>
+
+						<ul>
+							<li style="list-style: none;">
+								<p> <img class="img-list" src="img/Pan.png" width="35" height="35" > The pan tool allows the user to pan a Plot by left-dragging a mouse,
+								or on touch devices by dragging a figure or stylus, across the plot
+								region</p>
+							</li><br>
+							<li style="list-style: none;">
+								<p> <img class="img-list" src="img/BoxZoom.png" width="35" height="35" >The box zoom tool allows users to define a rectangular region of
+							 a Plot to zoom to by dragging he mouse or a figure over the plot region. The end of the drag event indicates the selection region is ready.</p>
+							</li><br>
+							<li style="list-style: none;">
+								<p> <img class="img-list" src="img/WheelZoom.png" width="35" height="35">The wheel zoom tool will zoom the plot in and out, centered on
+							 the current mouse location.<br>The wheel zoom tool also activates the border regions of a Plot for "single axis" zooming. For instance, zooming in the
+							 vertical border or axis will effect a zoom in the vertical direction only, with the horizontal dimension kept fixed. </p>
+							</li><br>
+							<li style="list-style: none;">
+								<p> <img class="img-list" src="img/Reset.png" width="35" height="35">The reset tool is an action. When activated in the toolbar, the
+							 tool resets the data bounds of the plot to their values when the plot was initially created.<br> The reset tool also resets the plot canvas
+							 dimensions to their original size.<br><em> A very useful tool in cases:</em><br>
+								<tab2>
+									When plots are panned and zoomed, because the axis will remain fixed to the last zoom or pan, even when date is changed. so reset will adjust the view to the default of selected date.
+								</tab2></p>
+							</li><br>
+							<li style="list-style: none;">
+								<p> <img class="img-list" src="img/Save.png" width="35" height="35">The save tool is an action. When activated, the tool opens a download
+							 dialog which allows to save an image reproduction of the plot in PNG format. If automatic download is not support by a web browser, the tool falls back
+							 to opening the generated image in a new tab or window. User then can manually save it by right clicking on the image and choosing \Save As" (or similar)
+							 menu item. </p>
+							</li><br>
+							<li style="list-style: none;">
+								<p> <img class="img-list" src="img/Crosshair.png" width="35" height="35">Click it to activate or deactivate the hover tool tip hove tool pit is
+							always active on start</p>
+							</li><br>
+							<li style="list-style: none;">
+								<p> <img class="img-list" src="img/bokeh_logo.png" width="35" height="35"> When activatef it will open a new tab to Boheh homepage.</p>
+							</li><br>
+						</ul>
+					</li>
+
+
+					<h3><li><a name="coverage">Cloud coverage slider</a></h3>
+						<ul style="list-style-type:disc">
+							<li>A slider that will only select data point with cloud coverage less or equal the value selected in percentages. Cloud coverage value is as recorded in the original data
+								on the server.
+							</li>
+						</ul>
+					</li>
+
+					<h3><li><a name="filter">Filter checkbox</a></h3>
+						<ul style="list-style-type:disc">
+							<li>Checking a checkbox mean that the data of a filter band represented by the character next
+								to it will be displayed. And unchecked checkbox mean that the data is not displayed on the charts.</li>
+						</ul>
+					</li>
+
+					<h3><li><a name="telescope">Telescope checkbox</a></h3>
+						<ul style="list-style-type:disc">
+							<li>Data associated with telescope next to the checkbox will be displayed or be removed if the checkbox is checked or unchecked respectively</li>
+						</ul>
+					</li>
+
+					<h3><li><a name="moon">Exclude moon checkbox</a></h3>
+						<ul style="list-style-type:disc">
+							<li>If checked data points of all the data of when the moon is up will be excluded from the plot evin from the median of median line calculations.</li>
+						</ul>
+					</li>
+				</ol>
+			</div>
+			</li>
+
+		<br><br><h1 style="text-align:center; list-style-position:inside;"><li>Date range tab</h1><br>
+
+			<figure>
+				<a href="#myPopup2" data-rel="popup" data-position-to="window">
+					<img src="img/second-screen.png" alt="Skaret View" style="width:200px%; height:450px; max-width=300px">
+				</a>
+				<center><figcaption><h3>Figuer 2: Date Range tab</h3></figcaption></center>
+
+				<div id="pagetwo" data-role="main" class="ui-content">
+					<div data-role="popup" id="myPopup2">
+						<p>Date Range</p>
+						<a href="#pagetwo" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+						<img src="img/second-screen.png" style="width:1200px;height:650px;" alt="Skaret View">
+					</div>
+				</div>
+			</figure>
+
+			<br>
+			<ol>
+				<h3><li>Chart tabs</h3>
+					<ul style="list-style-type:disc">
+						<li>This is the same as in Start page,  <a href="#chart-tabs">Chart tabs</a></li>
+						<li>All data points of this tab are a median of each observed date between selected range.</li>
+					</ul>
+				</li>
+
+				<h3><li>Date selector</h3>
+					<ul style="list-style-type:disc">
+						<li>This is the same as in Start page,  <a href="#date-selector">Date Selector</a> with addition.</li>
+						<li> This consist of two date selectors Start date and End date</li>
+							<ul>
+								<li><b>Start date:</b> This is the start date of the date range you wish to select and in all cases
+									this date must be the oldest in compare to the Start date. Data is selected from moon of this
+									date, morning of this date data will not be selected.
+								</li>
+								<li><b>End date:</b> This date must be the youngest in compare to the start date
+									and data is selected up until noon of the next day selected, <em>i.e.</em> If end date is 2017/01/01 then
+									the data of 2017/01/02 00:00:00 to 2017/01/02 12:00:00 will be included on the chart
+								</li>
+							</ul>
+					</ul>
+				</li>
+
+				<h3><li>status chart</h3>
+					<ul style="list-style-type:disc">
+						<li>This is the same as in Start page <a href="#status-chart">Status chart</a></li>
+					</ul>
+				</li>
+
+				<h3><li>Bokeh chart</h3>
+					<ul style="list-style-type:disc">
+						<li>This is where the charts are displayed for the components selected. not like in date tab charts are not divided into five positions. Here the
+						all the positions are displayed on the same chart. where a position can be added or removed from the chart by cheking or unckecking the Positions checkbox.
+						This charts also support mouse hover to get details of data you are looking at, and zooming
+						to get a smaller or large scale of data.</li>
+					</ul>
+				</li>
+
+				<h3><li>Bokeh control tools</h3>
+					<ul style="list-style-type:disc">
+						<li>This is the same as in Start page <a href="#bokeh-control">Bokeh control tools</a></li>
+					</ul>
+				</li>
+
+				<h3><li>Cloud coverage slider</h3>
+					<ul style="list-style-type:disc">
+						<li>This slider will remove all data point that have cloud coverage greater than slider value in percentage.
+							<em>i.e</em> all the data point having cloud coverage will not be included on calculating the median of selected days
+						</li>
+					</ul>
+				</li>
+
+				<h3><li>Telescope Checkbox</h3>
+					<ul style="list-style-type:disc">
+						<li>This is the same as in Start page <a href="#telescope">Telescope checkbox</a>.</li>
+					</ul>
+				</li>
+
+				<h3><li>Position checkbox</h3>
+					<ul style="list-style-type:disc">
+							<li>Activating checkbox add to the chart data points of position labeled next to it.</li>
+					</ul>
+				</li>
+
+				<h3><li>Filter checkbox</h3>
+					<ul style="list-style-type:disc">
+						<li>This is the same as in Start page <a href="#filter">Filter checkbox</a>.</li>
+					</ul>
+				</li>
+
+				<h3><li>Exclude moon</h3>
+					<ul style="list-style-type:disc">
+						<li>Activating this will exclude the data point of then the moon is up from calculating the median point of the date.</li>
+					</ul>
+				</li>
+			</ol>
+		</li>
+
+		<br><br><h1 style="text-align:center; list-style-position:inside;"><li>Date tab chart</h1>	<br>
+
+			<figure>
+				<a href="#myPopup3" data-rel="popup" data-position-to="window">
+					<img src="img/bokeh-date.png" alt="Skaret View" style="width:200px%; height:450px; max-width=300px">
+				</a>
+				<center><figcaption><h3>Figuer 3: Date chart</h3></figcaption></center>
+
+				<div id="pagethree" data-role="main" class="ui-content">
+					<div data-role="popup" id="myPopup3">
+						<p>Date Chart</p>
+						<a href="#pagethree" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+						<img src="img/bokeh-date.png" style="width:1200px;height:650px;" alt="Skaret View">
+					</div>
+				</div>
+			</figure>
+			<br>
+
+			<ul style="list-style-type:disc">
+				<li><b>Position name </b> This is the tittle of the chart representing the position there are four more position on the top of each chart. Namely South, East, North and West.</li>
+				<li><b>Moon up </b> The section of when the moon is up is shaded with a transparent green color.</li>
+				<li><b>Moon down </b> The section on the chart, of where the moon is down has no shadings.</li>
+				<li><b>Median Line </b>The middle line on the chart represent the median point of data points. The color of the line mean the line belong to the data points with the same color.</li>
+				<li><b>Data Point </b>shapes and color varies thought telescopes.</li>
+			</ul>
+		</li>
+
+		<br><br><h1 style="text-align:center; list-style-position:inside;"><li>Date Range tab chart</h1><br>
+
+				Data points on this chart are a median of each observed night. That is the median of data taken from the noon of the current date to the noon
+				of the next day. And data points median will be calculated as of what is selected. Thus point that will be considered will be the once that
+				have the values lower or equal the slider value. And if exclude moon checkbox is active then the points of when the moon is up will not be
+				included on the median calculations.
+			<br>
+			<br>
+
+			<figure>
+				<a href="#myPopup4" data-rel="popup" data-position-to="window">
+					<img src="img/bokeh-range.png" alt="Skaret View" style="width:200px%; height:450px; max-width=300px">
+				</a>
+				<center><figcaption><h3>Figuer 4: Date range chart</h3></figcaption></center>
+
+				<div id="pagefour" data-role="main" class="ui-content">
+					<div data-role="popup" id="myPopup4">
+						<p>Range Chart</p>
+						<a href="#pagefour" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+						<img src="img/bokeh-range.png" style="width:1200px;height:650px;" alt="Skaret View">
+					</div>
+				</div>
+			</figure>
+
+			<br>
+			<ul style="list-style-type:disc">
+
+				<li><b>Data Points and Legend</b> Data points shapes and color varies thought filters, shapes are as shown in legend. each data point of the same
+				telescope, position and filter band has the same color.</li>
+				<li><b>Median Line</b> The mean line will represent data point with the same color as it is.</li><br><br>
+			</ul>
+		</li>
+	</ol>
+</div>
+<br>
+<br>
+
+</body>
+</html>

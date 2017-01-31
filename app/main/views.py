@@ -19,3 +19,7 @@ def index():
     bokeh_server_url = '{scheme}://{host}:{bokeh_port}'.format(scheme=scheme, host=host, bokeh_port=BOKEH_PORT)
     bokeh_script = autoload_server(None, app_path='/skybright', url=bokeh_server_url)
     return render_template('index.html', bokeh_script=bokeh_script)
+
+@main.route('/what_is')
+def what_is():
+    return render_template('what_is.html')
